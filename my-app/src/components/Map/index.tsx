@@ -1,0 +1,240 @@
+"use client";
+import { useEffect, useRef, useState } from "react";
+import { Paper, CloseButton, Title } from "@mantine/core";
+import SavePlaceToList from "@/components/SavePlaceToList";
+
+const MapWithPlaceAutocomplete = () => {
+  const center = { lat: 23.7, lng: 121.0 }; // 台灣中央
+  const mapRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<google.maps.Map | null>(null);
+  const markerInstance =
+    useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
+  const infoWindowInstance = useRef<google.maps.InfoWindow | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState<any | null>(null);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [saveType, setSaveType] = useState<"list" | "plan" | null>(null);
+
+  useEffect(() => {
+    const initMap = async () => {
+      //@ts-ignore
+      const [{ Map }, { AdvancedMarkerElement }] = await Promise.all([
+        google.maps.importLibrary("maps") as Promise<typeof google.maps>,
+        google.maps.importLibrary("marker") as Promise<typeof google.maps>,
+      ]);
+
+      // Create map
+      const map = new Map(mapRef.current as HTMLElement, {
+        center,
+        zoom: 7,
+        mapId: "4504f8b37365c3d0",
+        mapTypeControl: false,
+      });
+
+      mapInstance.current = map;
+
+      // Create marker
+      const marker = new AdvancedMarkerElement({
+        map,
+      });
+      markerInstance.current = marker;
+
+      // Info window
+      const infoWindow = new google.maps.InfoWindow();
+      infoWindowInstance.current = infoWindow;
+
+      // Create Place Autocomplete Element
+      const placeAutocomplete =
+        //@ts-ignore
+        new google.maps.places.PlaceAutocompleteElement();
+      placeAutocomplete.id = "place-autocomplete-input";
+      placeAutocomplete.locationBias = center;
+
+      cardRef.current?.appendChild(placeAutocomplete);
+      map.controls[google.maps.ControlPosition.TOP_LEFT].push(cardRef.current!);
+
+      // Listen to place selection
+      placeAutocomplete.addEventListener(
+        "gmp-select",
+        //@ts-ignore
+        async ({ placePrediction }) => {
+          const place = placePrediction.toPlace();
+          //   const photoUrl = place.photos?.[0]?.getURL?.({ maxWidth: 300 }) ?? "";
+          //   const rating = place.rating ?? "";
+          //   const userRatingCount = place.userRatingCount ?? 0;
+          //   const websiteURI = place.websiteURI ?? "";
+          //   const googleMapsURI = place.googleMapsURI ?? "";
+
+          await place.fetchFields({
+            fields: [
+              "id",
+              "displayName",
+              "formattedAddress",
+              "location",
+              "viewport",
+              "photos",
+              "rating",
+              "userRatingCount",
+              "websiteURI",
+              "googleMapsURI",
+            ],
+          });
+
+          if (place.viewport) {
+            map.fitBounds(place.viewport);
+          } else if (place.location) {
+            map.setCenter(place.location);
+            map.setZoom(11);
+          }
+
+          marker.position = place.location;
+
+          const firstPhoto = place.photos?.[0];
+          let photoSrc = "";
+
+          if (firstPhoto) {
+            const photoName = firstPhoto.name;
+            photoSrc = `/api/placepic?photoName=${encodeURIComponent(
+              photoName
+            )}&maxWidth=400`;
+          }
+
+          const content = `
+              <div id="infowindow-content" style="width:320px">
+                  <img src="${photoSrc}" alt="Place photo" style="width: 320px; height: 225px; object-fit: cover;  border-radius: 8px; margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto;" />
+                  <div style="margin:8px 0 4px;font-size:18px; font-weight: 700">${
+                    place.displayName ?? "N/A"
+                  }</div>
+                  <div style="color:#555; margin-bottom:6px; font-weight: 500">${
+                    place.formattedAddress ?? "N/A"
+                  }</div>
+                  <div style="margin-bottom:6px;font-weight: 500">
+                  評分: ${place.rating ?? "無"} / 5 (共${
+            place.userRatingCount.toLocaleString() ?? "N/A"
+          } 則評論)
+                  </div>
+                  ${
+                    place.websiteURI
+                      ? `<div><a href="${place.websiteURI}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;font-weight: 500">前往官方網站</a></div>`
+                      : ""
+                  }
+                  ${
+                    place.googleMapsURI
+                      ? `<div><a href="${place.googleMapsURI}" target="_blank" rel="noopener noreferrer" style="color:#1a73e8;font-weight: 500">前往 Google Maps 查看</a></div>`
+                      : ""
+                  }
+                  <div style="display:flex; justify-content:space-between">
+                    <button id="toList-btn" style="margin-top:8px;padding:6px 12px;border:none;border-radius:8px;background:#2C3E50;color:#FAF3EB; font-size:16px; font-weight:700;cursor:pointer">
+                        加入收藏
+                    </button>
+                    <button id="toPlan-btn" style="margin-top:8px;padding:6px 12px;border:none;border-radius:8px;background:#2C3E50;color:#FAF3EB; font-size:16px; font-weight:700; cursor:pointer">
+                        加入行程
+                    </button>
+                  </div>
+                
+
+              </div>
+            `;
+
+          infoWindow.setContent(content);
+          infoWindow.setPosition(place.location);
+          infoWindow.open({ map, anchor: marker, shouldFocus: false });
+
+          setTimeout(() => {
+            const saveToListBtn = document.getElementById("toList-btn");
+            const saveToPlanBtn = document.getElementById("toPlan-btn");
+
+            const placeData = {
+              id: place.id,
+              name: place.displayName,
+              address: place.formattedAddress,
+              location: place.location.toJSON(),
+            };
+
+            if (saveToListBtn) {
+              saveToListBtn.addEventListener("click", async () => {
+                try {
+                  setSelectedPlace(placeData);
+                  setSaveType("list");
+                  setShowSaveModal(true);
+                } catch (error) {
+                  console.error("操作失敗", error);
+                  alert("操作失敗");
+                }
+              });
+            }
+
+            if (saveToPlanBtn) {
+              saveToPlanBtn.addEventListener("click", async () => {
+                try {
+                  setSelectedPlace(placeData);
+                  setSaveType("plan");
+                  setShowSaveModal(true);
+                } catch (error) {
+                  console.error("操作失敗", error);
+                  alert("操作失敗");
+                }
+              });
+            }
+          }, 0);
+        }
+      );
+    };
+
+    initMap();
+  }, []);
+
+  return (
+    <div className="h-full w-full">
+      <div
+        ref={cardRef}
+        id="place-autocomplete-card"
+        className="p-1 w-full max-w-xs mt-2 ml-2 mx-auto bg-white shadow-md rounded-md"
+      />
+      <div ref={mapRef} id="map" className="h-[calc(100vh-160px)] w-full" />
+      {showSaveModal && selectedPlace && (
+        <Paper
+          shadow="md"
+          radius="md"
+          p="sm"
+          className="absolute top-50 left-20 w-64"
+        >
+          <CloseButton
+            onClick={() => {
+              setShowSaveModal(false);
+              setSelectedPlace(null);
+              setSaveType(null);
+            }}
+            className="absolute bottom-2 left-53"
+            aria-label="Close"
+          />
+          <Title order={4} className="absolute top-4 left-3">
+            {saveType === "list" ? "加入收藏清單" : "加入行程計畫"}
+          </Title>
+
+          {saveType === "list" ? (
+            <SavePlaceToList
+              placeData={selectedPlace}
+              onClose={() => {
+                setShowSaveModal(false);
+                setSelectedPlace(null);
+                setSaveType(null);
+              }}
+            />
+          ) : (
+            <SavePlaceToPlan
+              placeData={selectedPlace}
+              onClose={() => {
+                setShowSaveModal(false);
+                setSelectedPlace(null);
+                setSaveType(null);
+              }}
+            />
+          )}
+        </Paper>
+      )}
+    </div>
+  );
+};
+
+export default MapWithPlaceAutocomplete;
