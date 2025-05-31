@@ -1,3 +1,4 @@
+"use client";
 import { useEffect, useState } from "react";
 import { Button } from "@mantine/core";
 import {
@@ -155,27 +156,6 @@ export default function SavePlaceToList({
           </div>
         </div>
       )}
-
-      {/* <div>
-        <p className="text-sm font-medium">新增清單：</p>
-        <input
-          value={newList}
-          onChange={(e) => setNewList(e.target.value)}
-          placeholder="輸入清單名稱"
-          className="border rounded p-1 w-full"
-        />
-        <button
-          onClick={handleCreateList}
-          className="bg-[#8C6E63] text-white px-4 py-1 rounded mt-1"
-        >
-          建立清單
-        </button>
-      </div> */}
-
-      {/* {lists.length === 0 && (
-        <p className="text-sm text-gray-600">尚無清單，請先建立。</p>
-      )} */}
-
       <div className="flex justify-between pt-1 mt-2">
         <button
           onClick={onClose}

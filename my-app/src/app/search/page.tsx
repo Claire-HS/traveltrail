@@ -1,10 +1,10 @@
 "user client";
-import SearchInput from "@/components/SearchInput";
-import { IconMapSearch } from "@tabler/icons-react";
-import { Container, Paper } from "@mantine/core";
+// import SearchInput from "@/components/SearchInput";
+// import { IconMapSearch } from "@tabler/icons-react";
+// import { Container, Paper } from "@mantine/core";
 import MapWithPlaceAutocomplete from "@/components/Map";
 import Script from "next/script";
-import SavePlaceToList from "@/components/SavePlaceToList";
+// import SavePlaceToList from "@/components/SavePlaceToList";
 
 export default function page() {
   return (

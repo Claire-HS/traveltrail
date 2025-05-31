@@ -2,22 +2,34 @@
 import { useEffect, useRef, useState } from "react";
 import { Paper, CloseButton, Title } from "@mantine/core";
 import SavePlaceToList from "@/components/SavePlaceToList";
+import SavePlaceToPlan from "@/components/SavePlaceToPlan";
+
+type PlaceData = {
+  id: string;
+  name: string;
+  address: string;
+  location: {
+    lat: number;
+    lng: number;
+  };
+};
+
+const center = { lat: 23.7, lng: 121.0 }; // 台灣中央
 
 const MapWithPlaceAutocomplete = () => {
-  const center = { lat: 23.7, lng: 121.0 }; // 台灣中央
   const mapRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<google.maps.Map | null>(null);
   const markerInstance =
     useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
   const infoWindowInstance = useRef<google.maps.InfoWindow | null>(null);
-  const [selectedPlace, setSelectedPlace] = useState<any | null>(null);
+  const [selectedPlace, setSelectedPlace] = useState<PlaceData | null>(null);
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveType, setSaveType] = useState<"list" | "plan" | null>(null);
 
   useEffect(() => {
     const initMap = async () => {
-      //@ts-ignore
+      //@ts-expect-error
       const [{ Map }, { AdvancedMarkerElement }] = await Promise.all([
         google.maps.importLibrary("maps") as Promise<typeof google.maps>,
         google.maps.importLibrary("marker") as Promise<typeof google.maps>,
@@ -45,7 +57,7 @@ const MapWithPlaceAutocomplete = () => {
 
       // Create Place Autocomplete Element
       const placeAutocomplete =
-        //@ts-ignore
+        //@ts-expect-error
         new google.maps.places.PlaceAutocompleteElement();
       placeAutocomplete.id = "place-autocomplete-input";
       placeAutocomplete.locationBias = center;
@@ -56,7 +68,7 @@ const MapWithPlaceAutocomplete = () => {
       // Listen to place selection
       placeAutocomplete.addEventListener(
         "gmp-select",
-        //@ts-ignore
+        //@ts-expect-error
         async ({ placePrediction }) => {
           const place = placePrediction.toPlace();
           //   const photoUrl = place.photos?.[0]?.getURL?.({ maxWidth: 300 }) ?? "";

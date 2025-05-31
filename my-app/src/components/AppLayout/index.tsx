@@ -1,7 +1,7 @@
 "use client";
-import { AppShell, Burger, Container } from "@mantine/core";
+import { AppShell, Container } from "@mantine/core";
 import AuthModal from "@/components/AuthModal";
-import { useDisclosure } from "@mantine/hooks";
+// import { useDisclosure } from "@mantine/hooks";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (

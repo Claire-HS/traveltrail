@@ -1,6 +1,6 @@
 "use client";
 
-import { Card, CardSection, Image, Text, Avatar, Group } from "@mantine/core";
+import { Card, CardSection, Image, Text, Avatar } from "@mantine/core";
 import { useRouter } from "next/navigation";
 
 interface CustomCardProps {
@@ -53,6 +53,5 @@ export default function MplansCard({
         </Text>
       </div>
     </Card>
-    
   );
 }

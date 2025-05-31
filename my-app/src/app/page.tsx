@@ -7,7 +7,7 @@ import MplansCard from "@/components/MplansCard";
 import { useDisclosure } from "@mantine/hooks";
 
 export default function Home() {
-  const router = useRouter();
+  // const router = useRouter();
   const [opened, { toggle }] = useDisclosure(false);
 
   return (
