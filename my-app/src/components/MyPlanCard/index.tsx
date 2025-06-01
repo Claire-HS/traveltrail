@@ -47,7 +47,7 @@ export default function MyPlanCard({
       <Text c="dimmed" size="md" ta="center">
         {travelDate}
       </Text>
-      <Text c="dimmed" size="md" ta="center" lineClamp={2}>
+      <Text c="dimmed" size="md" ta="center" lineClamp={1}>
         {note}
       </Text>
     </Card>

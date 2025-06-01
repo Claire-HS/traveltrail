@@ -2,10 +2,21 @@
 import { AppShell, Container } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import AuthModal from "@/components/AuthModal";
+import { useUser } from "@/context/UserContext";
 // import { useDisclosure } from "@mantine/hooks";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const user = useUser();
+
   const router = useRouter();
+  const handleClick = () => {
+    if (!user) {
+      alert("請先登入！");
+      return;
+    }
+    router.replace("/myplans");
+  };
+
   return (
     <AppShell header={{ height: 60 }} footer={{ height: 60 }}>
       <AppShell.Header
@@ -21,7 +32,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="w-xs h-full  pr-4 flex text-2xl font-semibold flex items-center justify-between bg-background text-foreground">
           <div
             className="w-[110px] px-1 rounded-xl flex justify-center border cursor-pointer"
-            onClick={() => router.push("/myplans")}
+            onClick={handleClick}
           >
             我的行程
           </div>

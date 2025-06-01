@@ -107,6 +107,7 @@ export default function Page() {
     <>
       <div className="h-[calc(100vh-160px)] w-[95vw] mt-10 mx-auto max-w-[1300px] flex flex-col">
         {/* <div className="text-3xl font-bold text-foreground">My Plans</div> */}
+
         <CreatePlan onCreate={handleCreatePlan}>
           {(showCreateUI) => (
             <div className="mb-4 flex justify-center">
@@ -139,6 +140,7 @@ export default function Page() {
               cols={{ base: 1, sm: 2, lg: 4 }}
               spacing={{ base: 10, sm: 40 }}
               verticalSpacing={{ base: "md", sm: "xl" }}
+              className="mb-30"
             >
               {plans.map((plan) => (
                 <MyPlanCard
@@ -146,11 +148,11 @@ export default function Page() {
                   imageSrc="/iceland.jpeg"
                   title={plan.planName}
                   travelDate={
-                    plan.startDate && plan.endDate
-                      ? `${plan.startDate} ～ ${plan.endDate}`
+                    plan.planStarDate && plan.planEndDate
+                      ? `${plan.planStarDate} ～ ${plan.planEndDate}`
                       : "日期未定"
                   }
-                  note={plan.note}
+                  note={plan.planNote}
                   route="/"
                 />
               ))}

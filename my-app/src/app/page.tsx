@@ -23,7 +23,12 @@ export default function Home() {
 
   return (
     <>
-      <div className="w-full h-96 border-b border-black flex justify-center relative">
+      <div className="w-full h-96 mt-5 border-b border-black flex justify-center relative">
+        <img
+          src="/banner.png"
+          alt="banner"
+          className="w-full h-96 object-cover"
+        />
         <div className="w-96 absolute bottom-0 left-1/2 transform -translate-x-1/2 mb-4 flex justify-center">
           <Button
             size="md"
@@ -32,7 +37,9 @@ export default function Home() {
             onClick={handleClick}
             styles={{
               root: {
-                color: "#fdfcf9",
+                backgroundColor: "rgba(44, 62, 80, 0.7)",
+                color: "#ffffff",
+                backdropFilter: "blur(4px)",
               },
             }}
             rightSection={<IconMapSearch size={20} />}
@@ -93,7 +100,6 @@ export default function Home() {
                 <Button
                   size="md"
                   radius="md"
-                  // fullWidth
                   color="#2C3E50"
                   onClick={toggle}
                   styles={{
