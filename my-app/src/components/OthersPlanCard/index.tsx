@@ -11,7 +11,7 @@ interface CustomCardProps {
   route: string;
 }
 
-export default function MplansCard({
+export default function OthersPlanCard({
   imageSrc,
   title,
   travelDate,

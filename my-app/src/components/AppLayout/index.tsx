@@ -19,7 +19,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           TravelTrail
         </div>
         <div className="w-xs h-full  pr-4 flex text-2xl font-semibold flex items-center justify-between bg-background text-foreground">
-          <div className="w-[110px] px-1 rounded-xl flex justify-center border">
+          <div
+            className="w-[110px] px-1 rounded-xl flex justify-center border cursor-pointer"
+            onClick={() => router.push("/myplans")}
+          >
             我的行程
           </div>
           <div className="w-[110px] px-1 rounded-xl flex justify-center border">

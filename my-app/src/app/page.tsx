@@ -4,7 +4,7 @@ import { Box, SimpleGrid, Text, Button, Group, Collapse } from "@mantine/core";
 import { IconMapSearch, IconSearch, IconHandClick } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import SearchInput from "@/components/SearchInput";
-import MplansCard from "@/components/MplansCard";
+import OthersPlanCard from "@/components/OthersPlanCard";
 import { useDisclosure } from "@mantine/hooks";
 import { useUser } from "@/context/UserContext";
 
@@ -58,28 +58,28 @@ export default function Home() {
             verticalSpacing={{ base: "md", sm: "xl" }}
             className="mt-20"
           >
-            <MplansCard
+            <OthersPlanCard
               imageSrc="/iceland.jpeg"
               title="行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱"
               travelDate="XXXX-XX-XX ~ XXXX-XX-XX"
               member="測試帳號"
               route="/sharing"
             />
-            <MplansCard
+            <OthersPlanCard
               imageSrc="/iceland.jpeg"
               title="行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱"
               travelDate="XXXX-XX-XX ~ XXXX-XX-XX"
               member="測試帳號"
               route="/sharing"
             />{" "}
-            <MplansCard
+            <OthersPlanCard
               imageSrc="/iceland.jpeg"
               title="行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱"
               travelDate="XXXX-XX-XX ~ XXXX-XX-XX"
               member="測試帳號"
               route="/sharing"
             />{" "}
-            <MplansCard
+            <OthersPlanCard
               imageSrc="/iceland.jpeg"
               title="行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱"
               travelDate="XXXX-XX-XX ~ XXXX-XX-XX"
