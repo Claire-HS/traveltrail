@@ -28,8 +28,10 @@ const MapWithPlaceAutocomplete = () => {
   const [saveType, setSaveType] = useState<"list" | "plan" | null>(null);
 
   useEffect(() => {
+    let destroyed = false;
     const initMap = async () => {
-      //@ts-expect-error
+      if (destroyed || mapInstance.current) return;
+      //@ts-ignore
       const [{ Map }, { AdvancedMarkerElement }] = await Promise.all([
         google.maps.importLibrary("maps") as Promise<typeof google.maps>,
         google.maps.importLibrary("marker") as Promise<typeof google.maps>,
@@ -55,9 +57,13 @@ const MapWithPlaceAutocomplete = () => {
       const infoWindow = new google.maps.InfoWindow();
       infoWindowInstance.current = infoWindow;
 
+      // 插入 autocomplete 元素前先清掉殘留的
+      const existing = cardRef.current?.querySelector("gmp-place-autocomplete");
+      if (existing) existing.remove();
+
       // Create Place Autocomplete Element
       const placeAutocomplete =
-        //@ts-expect-error
+        //@ts-ignore
         new google.maps.places.PlaceAutocompleteElement();
       placeAutocomplete.id = "place-autocomplete-input";
       placeAutocomplete.locationBias = center;
@@ -68,14 +74,9 @@ const MapWithPlaceAutocomplete = () => {
       // Listen to place selection
       placeAutocomplete.addEventListener(
         "gmp-select",
-        //@ts-expect-error
+        //@ts-ignore
         async ({ placePrediction }) => {
           const place = placePrediction.toPlace();
-          //   const photoUrl = place.photos?.[0]?.getURL?.({ maxWidth: 300 }) ?? "";
-          //   const rating = place.rating ?? "";
-          //   const userRatingCount = place.userRatingCount ?? 0;
-          //   const websiteURI = place.websiteURI ?? "";
-          //   const googleMapsURI = place.googleMapsURI ?? "";
 
           await place.fetchFields({
             fields: [
@@ -122,7 +123,7 @@ const MapWithPlaceAutocomplete = () => {
                   }</div>
                   <div style="margin-bottom:6px;font-weight: 500">
                   評分: ${place.rating ?? "無"} / 5 (共${
-            place.userRatingCount.toLocaleString() ?? "N/A"
+            place.userRatingCount?.toLocaleString() ?? "N/A"
           } 則評論)
                   </div>
                   ${
@@ -194,6 +195,20 @@ const MapWithPlaceAutocomplete = () => {
     };
 
     initMap();
+    return () => {
+      destroyed = true;
+
+      // Remove autocomplete element(s)
+      const inputs = cardRef.current?.querySelectorAll(
+        "gmp-place-autocomplete"
+      );
+      inputs?.forEach((el) => el.remove());
+
+      // Cleanup references
+      mapInstance.current = null;
+      markerInstance.current = null;
+      infoWindowInstance.current = null;
+    };
   }, []);
 
   return (

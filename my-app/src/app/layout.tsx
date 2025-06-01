@@ -6,6 +6,7 @@ import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { ModalsProvider } from "@mantine/modals";
 import AppLayout from "@/components/AppLayout";
+import { UserProvider } from "@/context/UserContext";
 import "@mantine/notifications/styles.css";
 
 const geistSans = Geist({
@@ -34,12 +35,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <MantineProvider>
-          <ModalsProvider>
-            <Notifications position="top-center" />
-            <AppLayout>{children}</AppLayout>
-          </ModalsProvider>
-        </MantineProvider>
+        <UserProvider>
+          <MantineProvider>
+            <ModalsProvider>
+              <Notifications position="top-center" />
+              <AppLayout>{children}</AppLayout>
+            </ModalsProvider>
+          </MantineProvider>
+        </UserProvider>
       </body>
     </html>
   );

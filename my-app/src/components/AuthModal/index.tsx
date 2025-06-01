@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useDisclosure } from "@mantine/hooks";
+import { useUser } from "@/context/UserContext";
 import {
   Modal,
   Button,
@@ -20,8 +21,6 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  onAuthStateChanged,
-  User,
   signOut,
 } from "firebase/auth";
 import { auth } from "@/library/firebase";
@@ -35,7 +34,7 @@ export default function AuthModal({
   const [opened, { open, close }] = useDisclosure(false);
   const router = useRouter();
   const [type, setType] = useState<"login" | "register">("login");
-  const [user, setUser] = useState<User | null>(null);
+  const user = useUser();
 
   const form = useForm({
     initialValues: { email: "", password: "", displayName: "" },
@@ -139,12 +138,12 @@ export default function AuthModal({
   };
 
   // 自動監聽 Firebase 的登入狀態變化，並即時更新 React 的使用者狀態。
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
+  // useEffect(() => {
+  //   const unsubscribe = onAuthStateChanged(auth, (user) => {
+  //     setUser(user);
+  //   });
+  //   return () => unsubscribe();
+  // }, []);
 
   return (
     <>

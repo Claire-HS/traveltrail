@@ -1,23 +1,44 @@
 "use client";
+import { useEffect, useState } from "react";
 import { Box, SimpleGrid, Text, Button, Group, Collapse } from "@mantine/core";
 import { IconMapSearch, IconSearch, IconHandClick } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import SearchInput from "@/components/SearchInput";
 import MplansCard from "@/components/MplansCard";
 import { useDisclosure } from "@mantine/hooks";
+import { useUser } from "@/context/UserContext";
 
 export default function Home() {
-  // const router = useRouter();
+  const user = useUser();
+  const router = useRouter();
   const [opened, { toggle }] = useDisclosure(false);
+
+  const handleClick = () => {
+    if (!user) {
+      alert("請先登入！");
+      return;
+    }
+    router.replace("/search");
+  };
 
   return (
     <>
       <div className="w-full h-96 border-b border-black flex justify-center relative">
-        <div className="w-96 absolute bottom-0 left-1/2 transform -translate-x-1/2 mb-4 ">
-          <SearchInput
-            placeholder="Where to go?"
-            leftSection={<IconMapSearch color="#8C6E63" size={32} />}
-          />
+        <div className="w-96 absolute bottom-0 left-1/2 transform -translate-x-1/2 mb-4 flex justify-center">
+          <Button
+            size="md"
+            radius="md"
+            color="#2C3E50"
+            onClick={handleClick}
+            styles={{
+              root: {
+                color: "#fdfcf9",
+              },
+            }}
+            rightSection={<IconMapSearch size={20} />}
+          >
+            探索景點
+          </Button>
         </div>
       </div>
       <div className="px-10 mt-5 relative flex flex-col">

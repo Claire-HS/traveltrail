@@ -31,7 +31,6 @@ export default function SavePlaceToPlan({
 }: SavePlaceToPlanProps) {
   const [plans, setPlans] = useState<any[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState("");
-  //   const [newPlan, setNewPlan] = useState("");
   const [note, setNote] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -103,7 +102,6 @@ export default function SavePlaceToPlan({
       });
       const newPlanId = newPlanRef.id;
       setPlans((prev) => [...prev, { id: newPlanId, planName: name }]); //append plan
-      //   setNewPlan("");
       alert("已新增行程！");
       setSelectedPlanId(newPlanId);
     } catch (error) {

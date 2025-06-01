@@ -13,10 +13,6 @@ export default function CreatePlan({ onCreate }: CreatePlanProps) {
   const [noDate, setNoDate] = useState(false);
   const [note, setNote] = useState("");
 
-  // const [newPlan, setNewPlan] = useState("");
-  // const [newPlanDate, setNewPlanDate] = useState("");
-  // const [dateUndecided, setDateUndecided] = useState(false);
-
   const handleSubmit = () => {
     if (!name.trim()) {
       alert("請輸入行程名稱");
@@ -54,12 +50,6 @@ export default function CreatePlan({ onCreate }: CreatePlanProps) {
           新增行程
         </Button>
       </div>
-      {/* <button
-        onClick={() => setIsOpen(true)}
-        className="text-sm px-4 py-1 border rounded"
-      >
-        新增行程
-      </button> */}
 
       {isOpen && (
         <div className="absolute top-50 left-20 w-64">

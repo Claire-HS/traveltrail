@@ -1,16 +1,21 @@
 "use client";
 import { AppShell, Container } from "@mantine/core";
+import { useRouter } from "next/navigation";
 import AuthModal from "@/components/AuthModal";
 // import { useDisclosure } from "@mantine/hooks";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   return (
     <AppShell header={{ height: 60 }} footer={{ height: 60 }}>
       <AppShell.Header
         className="w-full flex justify-between  shadow-md"
         style={{ borderBottom: "none" }}
       >
-        <div className="w-full h-full pl-4 text-4xl font-bold flex items-center bg-background text-foreground">
+        <div
+          className="w-full h-full pl-4 text-4xl font-bold flex items-center bg-background text-foreground cursor-pointer"
+          onClick={() => router.push("/")}
+        >
           TravelTrail
         </div>
         <div className="w-xs h-full  pr-4 flex text-2xl font-semibold flex items-center justify-between bg-background text-foreground">
