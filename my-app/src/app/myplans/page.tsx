@@ -153,7 +153,7 @@ export default function Page() {
                       : "日期未定"
                   }
                   note={plan.planNote}
-                  route="/"
+                  route="/planning"
                 />
               ))}
             </SimpleGrid>
