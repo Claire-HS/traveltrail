@@ -7,7 +7,9 @@ import { Notifications } from "@mantine/notifications";
 import { ModalsProvider } from "@mantine/modals";
 import AppLayout from "@/components/AppLayout";
 import { UserProvider } from "@/context/UserContext";
+import { DatesProvider } from "@mantine/dates";
 import "@mantine/notifications/styles.css";
+import "@mantine/dates/styles.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,12 +38,14 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <UserProvider>
-          <MantineProvider>
-            <ModalsProvider>
-              <Notifications position="top-center" />
-              <AppLayout>{children}</AppLayout>
-            </ModalsProvider>
-          </MantineProvider>
+          <DatesProvider settings={{ firstDayOfWeek: 0 }}>
+            <MantineProvider>
+              <ModalsProvider>
+                <Notifications position="top-center" />
+                <AppLayout>{children}</AppLayout>
+              </ModalsProvider>
+            </MantineProvider>
+          </DatesProvider>
         </UserProvider>
       </body>
     </html>

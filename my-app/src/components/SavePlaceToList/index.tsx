@@ -1,6 +1,16 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Button } from "@mantine/core";
+import { useEffect, useState, useRef } from "react";
+import {
+  Button,
+  Modal,
+  TextInput,
+  Textarea,
+  Radio,
+  Flex,
+  Group,
+  Text,
+  ScrollArea,
+} from "@mantine/core";
 import {
   getDocs,
   collection,
@@ -13,14 +23,17 @@ import {
 } from "firebase/firestore";
 import { db, auth } from "@/library/firebase";
 import { onAuthStateChanged } from "firebase/auth";
+import { notify } from "@/utilities/notify";
 
 interface SavePlaceToListProps {
   placeData: any;
+  opened: boolean;
   onClose: () => void;
 }
 
 export default function SavePlaceToList({
   placeData,
+  opened,
   onClose,
 }: SavePlaceToListProps) {
   const [lists, setLists] = useState<any[]>([]);
@@ -28,22 +41,24 @@ export default function SavePlaceToList({
   const [newList, setNewList] = useState("");
   const [note, setNote] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
+  const [isSavingPlace, setIsSavingPlace] = useState(false);
+  const [isCreatingList, setIsCreatingList] = useState(false);
+  const lastItemRef = useRef<HTMLDivElement>(null);
 
   const fetchLists = async (uid: string) => {
     const q = query(collection(db, `users/${uid}/lists`));
     const docSnap = await getDocs(q);
     const data = docSnap.docs.map((doc) => {
-      const d = doc.data();
       return {
         id: doc.id,
-        listName: d.name,
+        listName: doc.data().name,
       };
     });
     setLists(data);
   };
 
+  // 查詢user現有的收藏清單
   useEffect(() => {
-    // 查詢user現有的收藏清單
     const unsub = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserId(user.uid);
@@ -56,6 +71,7 @@ export default function SavePlaceToList({
   // 景點加入清單
   const handleSave = async (listId: string) => {
     if (!userId) return;
+    setIsSavingPlace(true);
     try {
       const placesRef = collection(
         db,
@@ -66,7 +82,7 @@ export default function SavePlaceToList({
       const q = query(placesRef, where("id", "==", placeData.id));
       const placeSnap = await getDocs(q);
       if (!placeSnap.empty) {
-        alert("此地點已在本清單中！");
+        notify({ type: "warning", message: "地點已存在此清單！" });
         return;
       }
 
@@ -76,101 +92,124 @@ export default function SavePlaceToList({
         createdAt: serverTimestamp(),
       });
       setNote("");
-      alert("已儲存至清單！");
+      notify({ type: "saved", message: "成功加入清單！" });
       onClose();
     } catch (error) {
       console.error("景點儲存失敗", error);
-      alert("景點儲存失敗");
+      notify({ type: "error", message: "加入清單失敗！" });
+    } finally {
+      setIsSavingPlace(false);
     }
   };
 
   // 新增清單
   const handleCreateList = async () => {
     if (!newList.trim() || !userId) return;
+    setIsCreatingList(true);
     try {
       const newListRef = doc(collection(db, `users/${userId}/lists`));
       await setDoc(newListRef, { name: newList.trim() });
       const newListId = newListRef.id;
       setLists((prev) => [...prev, { id: newListId, listName: newList }]); //append list
       setNewList("");
-      alert("已新增清單！");
+      // notify({ type: "success", message: "新增成功！" });
       setSelectedListId(newListId);
+      setTimeout(() => {
+        lastItemRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 50);
     } catch (error) {
       console.error("新增清單失敗", error);
-      alert("新增清單失敗");
+      notify({ type: "error", message: "新增清單失敗！" });
+    } finally {
+      setIsCreatingList(false);
     }
   };
 
   return (
-    <div>
-      <div className="mt-2">
-        <p className="text-sm font-medium">新增清單：</p>
-        <input
-          value={newList}
-          onChange={(e) => setNewList(e.target.value)}
-          placeholder="輸入清單名稱"
-          className="border rounded p-1 w-full"
-        />
-        <div className="flex justify-end px-2 py-1 mt-1 ">
-          <Button
-            variant="light"
-            color="#2C3E50"
-            size="xs"
-            radius="xl"
-            onClick={handleCreateList}
-          >
-            建立清單
-          </Button>
-        </div>
-      </div>
-      {lists.length === 0 && (
-        <p className="text-sm text-gray-600">尚無清單，請先建立。</p>
-      )}
-      {lists.length > 0 && (
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <p className="text-base font-medium mt-1">選擇清單：</p>
-            {lists.map((list) => (
-              <label key={list.id} className="flex items-center space-x-2">
-                <input
-                  type="radio"
-                  name="selectedList"
-                  value={list.id}
-                  checked={selectedListId === list.id}
-                  onChange={() => setSelectedListId(list.id)}
-                />
-                <span>{list.listName}</span>
-              </label>
-            ))}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium">備註：</label>
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              className="w-full border rounded p-1 text-xs"
-              rows={1}
-              placeholder="選填"
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title="加入至收藏清單"
+      centered
+      size="xs"
+    >
+      <Flex direction="column" gap="sm">
+        <div>
+          <Text size="sm" fw={500}>
+            新增清單
+          </Text>
+          <Flex gap="xs" mt={4} align="center">
+            <TextInput
+              placeholder="輸入清單名稱"
+              value={newList}
+              onChange={(e) => setNewList(e.currentTarget.value)}
+              style={{ flex: 1 }}
             />
-          </div>
+            <Button
+              variant="light"
+              size="xs"
+              color="#2C3E50"
+              loading={isCreatingList}
+              onClick={handleCreateList}
+            >
+              建立
+            </Button>
+          </Flex>
         </div>
-      )}
-      <div className="flex justify-between pt-1 mt-2">
-        <button
-          onClick={onClose}
-          className="px-4 py-1 border rounded cursor-pointer"
-        >
-          取消
-        </button>
-        <button
-          onClick={() => handleSave(selectedListId)}
-          className="bg-[#2C3E50] text-[#FAF3EB] px-4 py-1 rounded cursor-pointer disabled:cursor-not-allowed"
-          disabled={!selectedListId}
-        >
-          確定
-        </button>
-      </div>
-    </div>
+
+        {lists.length === 0 ? (
+          <Text size="sm" c="dimmed">
+            尚無清單，請先建立。
+          </Text>
+        ) : (
+          <>
+            <Text size="sm" fw={500}>
+              選擇清單
+            </Text>
+            <Radio.Group
+              value={selectedListId}
+              onChange={setSelectedListId}
+              name="list-radio"
+            >
+              <ScrollArea h={80} type="auto" scrollbarSize={6}>
+                <Flex direction="column" gap={4}>
+                  {lists.map((list, idx) => (
+                    <div
+                      key={list.id}
+                      ref={idx === lists.length - 1 ? lastItemRef : null}
+                    >
+                      <Radio value={list.id} label={list.listName} />
+                    </div>
+                  ))}
+                </Flex>
+              </ScrollArea>
+            </Radio.Group>
+
+            <Textarea
+              label="地點備註"
+              value={note}
+              onChange={(e) => setNote(e.currentTarget.value)}
+              placeholder="選填"
+              autosize
+              minRows={1}
+            />
+          </>
+        )}
+
+        <Group justify="space-between" pt="sm">
+          <Button variant="default" onClick={onClose}>
+            取消
+          </Button>
+          <Button
+            color="#2C3E50"
+            disabled={!selectedListId}
+            loading={isSavingPlace}
+            onClick={() => handleSave(selectedListId)}
+          >
+            確定
+          </Button>
+        </Group>
+      </Flex>
+    </Modal>
   );
 }

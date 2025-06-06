@@ -7,6 +7,7 @@ import SearchInput from "@/components/SearchInput";
 import OthersPlanCard from "@/components/OthersPlanCard";
 import { useDisclosure } from "@mantine/hooks";
 import { useUser } from "@/context/UserContext";
+import { notify } from "@/utilities/notify";
 
 export default function Home() {
   const user = useUser();
@@ -15,7 +16,7 @@ export default function Home() {
 
   const handleClick = () => {
     if (!user) {
-      alert("請先登入！");
+      notify({ type: "warning", message: "請先登入！" });
       return;
     }
     router.replace("/search");

@@ -219,46 +219,27 @@ const MapWithPlaceAutocomplete = () => {
         className="p-1 w-full max-w-xs mt-2 ml-2 mx-auto bg-white shadow-md rounded-md"
       />
       <div ref={mapRef} id="map" className="h-[calc(100vh-160px)] w-full" />
-      {showSaveModal && selectedPlace && (
-        <Paper
-          shadow="md"
-          radius="md"
-          p="sm"
-          className="absolute top-50 left-20 w-64"
-        >
-          <CloseButton
-            onClick={() => {
-              setShowSaveModal(false);
-              setSelectedPlace(null);
-              setSaveType(null);
-            }}
-            className="absolute bottom-2 left-53"
-            aria-label="Close"
-          />
-          <Title order={4} className="absolute top-4 left-3">
-            {saveType === "list" ? "加入收藏清單" : "加入行程計畫"}
-          </Title>
 
-          {saveType === "list" ? (
-            <SavePlaceToList
-              placeData={selectedPlace}
-              onClose={() => {
-                setShowSaveModal(false);
-                setSelectedPlace(null);
-                setSaveType(null);
-              }}
-            />
-          ) : (
-            <SavePlaceToPlan
-              placeData={selectedPlace}
-              onClose={() => {
-                setShowSaveModal(false);
-                setSelectedPlace(null);
-                setSaveType(null);
-              }}
-            />
-          )}
-        </Paper>
+      {saveType === "list" ? (
+        <SavePlaceToList
+          placeData={selectedPlace}
+          opened={showSaveModal}
+          onClose={() => {
+            setShowSaveModal(false);
+            setSelectedPlace(null);
+            setSaveType(null);
+          }}
+        />
+      ) : (
+        <SavePlaceToPlan
+          placeData={selectedPlace}
+          opened={showSaveModal}
+          onClose={() => {
+            setShowSaveModal(false);
+            setSelectedPlace(null);
+            setSaveType(null);
+          }}
+        />
       )}
     </div>
   );

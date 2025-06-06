@@ -23,6 +23,9 @@ export default function page() {
     }
   }, []);
 
+  // 尚未確認登入狀態時不渲染任何內容（避免閃爍）
+  if (user === undefined) return null;
+
   return (
     <>
       <Script

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDisclosure } from "@mantine/hooks";
 import { useUser } from "@/context/UserContext";
@@ -15,8 +15,6 @@ import {
   Anchor,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -25,6 +23,7 @@ import {
 } from "firebase/auth";
 import { auth } from "@/library/firebase";
 import { FirebaseError } from "firebase/app";
+import { notify } from "@/utilities/notify";
 
 export default function AuthModal({
   buttonClassName = "",
@@ -51,30 +50,6 @@ export default function AuthModal({
   });
 
   async function handleSubmit(values: typeof form.values) {
-    const showSuccessNotification = (
-      title: string,
-      message: string,
-      color: string
-    ) => {
-      notifications.show({
-        title,
-        message,
-        color,
-        icon: <IconCheck size={20} />,
-        autoClose: 2000,
-      });
-    };
-
-    const showErrorNotification = (title: string, message: string) => {
-      notifications.show({
-        title,
-        message,
-        color: "red",
-        icon: <IconX size={20} />,
-        autoClose: 2000,
-      });
-    };
-
     try {
       let userCredential;
       if (type === "login") {
@@ -84,11 +59,11 @@ export default function AuthModal({
           values.password
         );
 
-        showSuccessNotification(
-          "登入成功",
-          `歡迎回來，${userCredential.user.displayName}`,
-          "green"
-        );
+        notify({
+          type: "success",
+          title: "登入成功",
+          message: `歡迎回來，${userCredential.user.displayName}`,
+        });
 
         form.reset();
         close();
@@ -103,47 +78,46 @@ export default function AuthModal({
           displayName: values.displayName,
         });
 
-        showSuccessNotification(
-          "註冊成功",
-          `帳號 ${userCredential.user.email} 已建立，歡迎加入！`,
-          "blue"
-        );
+        notify({
+          type: "success",
+          title: "註冊成功",
+          message: `帳號 ${userCredential.user.email} 已建立，歡迎加入！`,
+        });
+
         form.reset();
         close();
       }
     } catch (error: unknown) {
       if (error instanceof FirebaseError) {
         if (error.code === "auth/invalid-credential") {
-          showErrorNotification("登入失敗", "帳號或密碼錯誤，請再試一次");
+          notify({
+            type: "error",
+            title: "登入失敗",
+            message: "帳號或密碼錯誤，請再試一次",
+          });
         } else {
-          showErrorNotification("操作失敗", error.message);
+          notify({
+            type: "error",
+            title: "操作失敗",
+            message: error.message,
+          });
         }
       } else {
         console.error("未知錯誤：", error);
-        showErrorNotification("未知錯誤", "請再試一次");
+        notify({
+          type: "error",
+          title: "未知錯誤",
+          message: "請稍後再試",
+        });
       }
     }
   }
 
   const logout = async () => {
     await signOut(auth);
-    notifications.show({
-      title: "已登出",
-      message: "您已成功登出",
-      color: "gray",
-      icon: <IconCheck size={20} />,
-      autoClose: 2000,
-    });
+    notify({ type: "logout", message: "您已成功登出。" });
     router.push("/");
   };
-
-  // 自動監聽 Firebase 的登入狀態變化，並即時更新 React 的使用者狀態。
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChanged(auth, (user) => {
-  //     setUser(user);
-  //   });
-  //   return () => unsubscribe();
-  // }, []);
 
   return (
     <>

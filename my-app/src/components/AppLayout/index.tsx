@@ -3,6 +3,7 @@ import { AppShell, Container } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import AuthModal from "@/components/AuthModal";
 import { useUser } from "@/context/UserContext";
+import { notify } from "@/utilities/notify";
 // import { useDisclosure } from "@mantine/hooks";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -11,7 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const handleClick = () => {
     if (!user) {
-      alert("請先登入！");
+      notify({ type: "warning", message: "請先登入！" });
       return;
     }
     router.replace("/myplans");
