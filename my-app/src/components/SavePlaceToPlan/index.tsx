@@ -9,9 +9,10 @@ import {
   doc,
   setDoc,
   serverTimestamp,
+  orderBy,
 } from "firebase/firestore";
 import { db } from "@/library/firebase";
-import CreatePlan from "@/components/CreatePlan";
+import HandlePlan from "@/components/HandlePlan";
 import { notify } from "@/utilities/notify";
 import {
   Modal,
@@ -34,8 +35,9 @@ interface SavePlaceToPlanProps {
 
 interface PlanInput {
   name: string;
-  date?: string | null;
-  note?: string;
+  startDate?: string | null;
+  endDate?: string | null;
+  note?: string | null;
 }
 
 interface Plan {
@@ -61,7 +63,10 @@ export default function SavePlaceToPlan({
   const stack = useModalsStack(["addPlace", "addNewPlan"]);
 
   const fetchPlans = async (uid: string) => {
-    const q = query(collection(db, `users/${uid}/plans`));
+    const q = query(
+      collection(db, `users/${uid}/plans`),
+      orderBy("createdAt", "desc")
+    );
     const docSnap = await getDocs(q);
     const data = docSnap.docs.map((doc) => {
       const d = doc.data();
@@ -124,15 +129,20 @@ export default function SavePlaceToPlan({
   };
 
   // 新增行程
-  const handleCreatePlan = async ({ name, date, note }: PlanInput) => {
+  const handleCreatePlan = async ({
+    name,
+    startDate,
+    endDate,
+    note,
+  }: PlanInput) => {
     if (!userId) return;
     setIsCreatingPlan(true);
 
     try {
-      const newPlanRef = doc(collection(db, `users/${userId}/plans`));
-      await setDoc(newPlanRef, {
+      const newPlanRef = await addDoc(collection(db, `users/${userId}/plans`), {
         name,
-        date: date || null,
+        startDate: startDate || null,
+        endDate: endDate || null,
         note: note?.trim() || null,
         createdAt: serverTimestamp(),
       });
@@ -227,8 +237,8 @@ export default function SavePlaceToPlan({
         size="xs"
         onClose={() => stack.close("addNewPlan")}
       >
-        <CreatePlan
-          onCreate={(data) => {
+        <HandlePlan
+          onSubmit={(data) => {
             handleCreatePlan(data);
             stack.close("addNewPlan");
           }}

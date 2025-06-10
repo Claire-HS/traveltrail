@@ -20,6 +20,7 @@ import {
   doc,
   setDoc,
   serverTimestamp,
+  orderBy,
 } from "firebase/firestore";
 import { db, auth } from "@/library/firebase";
 import { onAuthStateChanged } from "firebase/auth";
@@ -46,7 +47,10 @@ export default function SavePlaceToList({
   const lastItemRef = useRef<HTMLDivElement>(null);
 
   const fetchLists = async (uid: string) => {
-    const q = query(collection(db, `users/${uid}/lists`));
+    const q = query(
+      collection(db, `users/${uid}/lists`),
+      orderBy("createdAt", "desc")
+    );
     const docSnap = await getDocs(q);
     const data = docSnap.docs.map((doc) => {
       return {

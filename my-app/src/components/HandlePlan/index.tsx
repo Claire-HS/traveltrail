@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Flex,
   TextInput,
@@ -13,22 +13,28 @@ import { DatePickerInput } from "@mantine/dates";
 import { notify } from "@/utilities/notify";
 import { IconCalendar } from "@tabler/icons-react";
 
-interface CreatePlanProps {
-  onClose: () => void;
-  onCreate: (data: {
-    name: string;
-    startDate: string | null;
-    endDate: string | null;
-    note: string;
-  }) => void;
-  isLoading?: boolean;
+interface PlanData {
+  name: string;
+  startDate: string | null;
+  endDate: string | null;
+  note: string | null;
 }
 
-export default function CreatePlan({
+interface handlePlanProps {
+  onClose: () => void;
+  onSubmit: (data: PlanData) => void;
+  isLoading?: boolean;
+  mode?: "create" | "edit";
+  defaultData?: PlanData;
+}
+
+export default function HandlePlan({
   onClose,
-  onCreate,
+  onSubmit,
   isLoading,
-}: CreatePlanProps) {
+  mode = "create",
+  defaultData,
+}: handlePlanProps) {
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState<string | null>(null);
   const [endDate, setEndDate] = useState<string | null>(null);
@@ -36,6 +42,18 @@ export default function CreatePlan({
   const [note, setNote] = useState("");
   const icon = <IconCalendar size={20} stroke={1.5} />;
 
+  // 修改資訊
+  useEffect(() => {
+    if (defaultData) {
+      setName(defaultData.name);
+      setStartDate(defaultData.startDate);
+      setEndDate(defaultData.endDate);
+      setNote(defaultData.note ?? "");
+      setNoDate(!defaultData.startDate && !defaultData.endDate);
+    }
+  }, [defaultData]);
+
+  // 填寫送出檢查
   const handleSubmit = () => {
     if (!name.trim()) {
       notify({ type: "warning", message: "請輸入行程名稱" });
@@ -55,19 +73,20 @@ export default function CreatePlan({
       return;
     }
 
-    onCreate({
+    onSubmit({
       name: name.trim(),
       startDate: noDate ? null : startDate,
       endDate: noDate ? null : endDate,
-      note: note.trim(),
+      note: note.trim() === "" ? null : note.trim(),
     });
 
-    // 清空欄位
-    setName("");
-    setStartDate(null);
-    setEndDate(null);
-    setNote("");
-    setNoDate(false);
+    if (mode === "create") {
+      setName("");
+      setStartDate(null);
+      setEndDate(null);
+      setNote("");
+      setNoDate(false);
+    }
   };
 
   return (
@@ -128,8 +147,8 @@ export default function CreatePlan({
         <Button variant="default" onClick={onClose}>
           取消
         </Button>
-        <Button loading={isLoading} color="dark" onClick={handleSubmit}>
-          確定
+        <Button loading={isLoading} color="#2C3E50" onClick={handleSubmit}>
+          {mode === "edit" ? "儲存變更" : "確定"}
         </Button>
       </Group>
     </Flex>
