@@ -50,7 +50,7 @@ export default function SavePlaceToPlan({
 }: SavePlaceToPlanProps) {
   const user = useUser();
   const userId = user?.uid ?? null;
-
+  const userName = user?.displayName;
   const [plans, setPlans] = useState<any[]>([]);
   const [selectedPlanId, setSelectedPlanId] = useState("");
   const [note, setNote] = useState("");
@@ -142,7 +142,9 @@ export default function SavePlaceToPlan({
         startDate: startDate || null,
         endDate: endDate || null,
         note: note?.trim() || null,
+        isPublic: false, // 新增時預設不公開
         createdAt: serverTimestamp(),
+        userName,
       });
 
       const newPlanId = newPlanRef.id;

@@ -2,11 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Button, Group, Text, Stack } from "@mantine/core";
+import { notify } from "@/utilities/notify";
 
 interface Props {
   settingData?: {
     id: string;
     isPublic: boolean;
+    startDate: string | null;
+    endDate: string | null;
   };
   currentIsPublic: boolean;
   isLoading: boolean;
@@ -30,6 +33,10 @@ export default function PrivacySettingModalContent({
   if (!settingData) return null;
 
   const handleToggle = () => {
+    if (!currentIsPublic && (!settingData.startDate || !settingData.endDate)) {
+      notify({ type: "warning", message: "公開前須先設定旅遊起始日期！" });
+      return;
+    }
     onPrivacyChange(settingData.id, isPublic);
   };
 

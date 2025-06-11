@@ -1,13 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Box, SimpleGrid, Text, Button, Group, Collapse } from "@mantine/core";
+import { Box, Text, Button, Group, Collapse } from "@mantine/core";
 import { IconMapSearch, IconSearch, IconHandClick } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import SearchInput from "@/components/SearchInput";
-import OthersPlanCard from "@/components/OthersPlanCard";
 import { useDisclosure } from "@mantine/hooks";
 import { useUser } from "@/context/UserContext";
 import { notify } from "@/utilities/notify";
+import PublicPlansGrid from "@/components/PublicPlansGrid";
 
 export default function Home() {
   const user = useUser();
@@ -59,42 +58,8 @@ export default function Home() {
             leftSection={<IconSearch color="#8C6E63" size={32} />}
           />
         </div>
-        <div className="w-full pb-15 flex flex-col justify-center items-center">
-          <SimpleGrid
-            cols={{ base: 1, sm: 2, lg: 4 }}
-            spacing={{ base: 10, sm: 40 }}
-            verticalSpacing={{ base: "md", sm: "xl" }}
-            className="mt-20"
-          >
-            <OthersPlanCard
-              imageSrc="/iceland.jpeg"
-              title="行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱"
-              travelDate="XXXX-XX-XX ~ XXXX-XX-XX"
-              member="測試帳號"
-              route="/sharing"
-            />
-            <OthersPlanCard
-              imageSrc="/iceland.jpeg"
-              title="行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱"
-              travelDate="XXXX-XX-XX ~ XXXX-XX-XX"
-              member="測試帳號"
-              route="/sharing"
-            />{" "}
-            <OthersPlanCard
-              imageSrc="/iceland.jpeg"
-              title="行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱"
-              travelDate="XXXX-XX-XX ~ XXXX-XX-XX"
-              member="測試帳號"
-              route="/sharing"
-            />{" "}
-            <OthersPlanCard
-              imageSrc="/iceland.jpeg"
-              title="行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱行程名稱"
-              travelDate="XXXX-XX-XX ~ XXXX-XX-XX"
-              member="測試帳號"
-              route="/sharing"
-            />
-          </SimpleGrid>
+        <div className="w-full pb-15 flex flex-col justify-center items-center min-h-[500px]">
+          <PublicPlansGrid />
           <div className="mt-20">
             <Box maw={1200} mx="auto">
               <Group justify="center" mb={20}>

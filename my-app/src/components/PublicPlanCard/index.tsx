@@ -7,15 +7,15 @@ interface CustomCardProps {
   imageSrc: string;
   title: string;
   travelDate: string;
-  member: string;
+  ownerName: string;
   route: string;
 }
 
-export default function OthersPlanCard({
+export default function PublicPlanCard({
   imageSrc,
   title,
   travelDate,
-  member,
+  ownerName,
   route,
 }: CustomCardProps) {
   const router = useRouter();
@@ -38,8 +38,9 @@ export default function OthersPlanCard({
         fw={500}
         size="lg"
         mt="xs"
-        lineClamp={2}
-        className="text-wrap truncate w-full"
+        lineClamp={1}
+        ta="center"
+        className="truncate w-full"
       >
         {title}
       </Text>
@@ -49,7 +50,7 @@ export default function OthersPlanCard({
       <div className="flex justify-center items-center mt-2">
         <Avatar size="sm" variant="filled" radius="xl" color="#8C6E63" mx={8} />
         <Text c="dimmed" size="md">
-          {member}
+          {ownerName}
         </Text>
       </div>
     </Card>

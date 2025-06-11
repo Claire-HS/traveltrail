@@ -66,6 +66,8 @@ export default function Page() {
   const [targetPlan, setTargetPlan] = useState<{
     id: string;
     isPublic: boolean;
+    startDate: string | null;
+    endDate: string | null;
   } | null>(null);
   const [isPublicState, setIsPublicState] = useState<boolean | null>(null);
 
@@ -89,6 +91,7 @@ export default function Page() {
           note: note?.trim() || null,
           isPublic: false, // 新增時預設不公開
           createdAt: serverTimestamp(),
+          userName: user.displayName,
         }
       );
 
@@ -390,7 +393,7 @@ export default function Page() {
               <Loader size="xl" color="#2C3E50" />
             </div>
           ) : plans.length === 0 ? (
-            <p className="text-3xl font-bold text-gray-600 mt-25">
+            <p className="text-3xl font-bold text-gray-600 mt-25 text-center">
               尚無行程，請先建立。
             </p>
           ) : (
@@ -404,7 +407,7 @@ export default function Page() {
                 <div key={plan.id} className="flex justify-center">
                   <MyPlanCard
                     key={plan.id}
-                    imageSrc="/iceland.jpeg"
+                    imageSrc="/iceland.jpeg" //待處理
                     title={plan.name}
                     travelDate={
                       plan.startDate && plan.endDate
@@ -417,7 +420,12 @@ export default function Page() {
                     onDeleteClick={() => confirmDeletePlan(plan.id)}
                     onEditClick={() => handleEditPlan(plan)}
                     onPrivacyClick={() => {
-                      setTargetPlan({ id: plan.id, isPublic: plan.isPublic });
+                      setTargetPlan({
+                        id: plan.id,
+                        isPublic: plan.isPublic,
+                        startDate: plan.startDate,
+                        endDate: plan.endDate,
+                      });
                       setTimeout(() => openEditPublic(), 0);
                     }}
                   />
