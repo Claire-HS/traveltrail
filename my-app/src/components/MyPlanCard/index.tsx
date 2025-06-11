@@ -17,6 +17,7 @@ import {
   IconFilePencil,
   IconEyeQuestion,
   IconUsersPlus,
+  IconEyeOff,
 } from "@tabler/icons-react";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -26,8 +27,10 @@ interface CustomCardProps {
   travelDate: string;
   note: string | null;
   route: string;
+  isPublic?: boolean;
   onDeleteClick?: () => void;
   onEditClick?: () => void;
+  onPrivacyClick?: () => void;
 }
 
 export default function MyPlanCard({
@@ -36,8 +39,10 @@ export default function MyPlanCard({
   travelDate,
   note,
   route,
+  isPublic,
   onDeleteClick,
   onEditClick,
+  onPrivacyClick,
 }: CustomCardProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -57,6 +62,12 @@ export default function MyPlanCard({
       <Flex direction="column" h="100%">
         <CardSection className="relative">
           <Image src={imageSrc} h={160} alt="planPic" />
+          {showActions && !isPublic && (
+            <div className="absolute top-2 left-2 z-10 text-gray-500">
+              <IconEyeOff size={25} />
+            </div>
+          )}
+
           {showActions && (
             <Group className="absolute top-2 right-2 z-10">
               <ActionIcon
@@ -74,7 +85,7 @@ export default function MyPlanCard({
           )}
         </CardSection>
 
-        <Text fw={500} size="lg" mt="xs" ta="center" lineClamp={2}>
+        <Text fw={500} size="lg" mt="xs" ta="center" lineClamp={1}>
           {title}
         </Text>
         <Text c="dimmed" size="md" ta="center">
@@ -122,16 +133,28 @@ export default function MyPlanCard({
                 >
                   修改資訊
                 </Menu.Item>
-                <Menu.Item leftSection={<IconEyeQuestion size={14} />}>
-                  權限設定
+                <Menu.Item
+                  leftSection={<IconEyeQuestion size={14} />}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onPrivacyClick?.();
+                  }}
+                >
+                  隱私設定
                 </Menu.Item>
                 <Menu.Item leftSection={<IconUsersPlus size={14} />}>
-                  共同編輯
+                  共同編輯-尚未完成
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
 
-            <Button size="xs" fullWidth variant="outline" color="#2C3E50">
+            <Button
+              size="xs"
+              fullWidth
+              variant="outline"
+              color="#2C3E50"
+              disabled
+            >
               記帳
             </Button>
             <Button size="xs" fullWidth variant="outline" color="#2C3E50">
