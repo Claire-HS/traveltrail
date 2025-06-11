@@ -157,7 +157,13 @@ export default function MyPlanCard({
             >
               記帳
             </Button>
-            <Button size="xs" fullWidth variant="outline" color="#2C3E50">
+            <Button
+              size="xs"
+              fullWidth
+              variant="outline"
+              color="#2C3E50"
+              disabled
+            >
               編輯行程
             </Button>
           </Flex>
