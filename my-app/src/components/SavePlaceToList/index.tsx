@@ -49,7 +49,7 @@ export default function SavePlaceToList({
   const fetchLists = async (uid: string) => {
     const q = query(
       collection(db, `users/${uid}/lists`),
-      orderBy("createdAt", "desc")
+      orderBy("name", "desc")
     );
     const docSnap = await getDocs(q);
     const data = docSnap.docs.map((doc) => {
