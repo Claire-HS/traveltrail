@@ -7,13 +7,8 @@ import {
   getDocs,
   collection,
   query,
-  getDoc,
-  addDoc,
-  where,
   doc,
-  setDoc,
   deleteDoc,
-  serverTimestamp,
   updateDoc,
   orderBy,
 } from "firebase/firestore";
@@ -31,6 +26,7 @@ import {
 } from "@tabler/icons-react";
 import { notify } from "@/utilities/notify";
 import ListItemCard from "@/components/ListItemCard";
+// import DraggableListItemCard from "@/components/DraggableListItemCard";
 
 interface listItem {
   id: string;
@@ -45,21 +41,25 @@ interface listItem {
 
 interface SidebarListProps {
   onExpandChange?: (expanded: boolean) => void;
+  places?: listItem[];
 }
 
-export default function SidebarList({ onExpandChange }: SidebarListProps) {
+export default function SidebarList({
+  onExpandChange,
+  places,
+}: SidebarListProps) {
   const user = useAuthCheck();
   const [userId, setUserId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [lists, setLists] = useState<any[]>([]);
   const [selectedList, setSelectedList] = useState<string | null>(null);
-  const [listDetail, setListDetail] = useState<any | null>(null);
+  //   const [listDetail, setListDetail] = useState<any | null>(null);
   const [listItems, setListItems] = useState<listItem[] | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
+  //   const [isFetching, setIsFetching] = useState(false);
 
   // 取得lists
   const fetchLists = async (uid: string) => {
-    setIsFetching(true);
+    // setIsFetching(true);
     try {
       const q = query(
         collection(db, `users/${uid}/lists`),
@@ -78,7 +78,7 @@ export default function SidebarList({ onExpandChange }: SidebarListProps) {
       notify({ type: "error", message: "取得行程失敗，請稍後再試！" });
       setLists([]);
     } finally {
-      setIsFetching(false);
+      //   setIsFetching(false);
     }
   };
 
@@ -129,17 +129,6 @@ export default function SidebarList({ onExpandChange }: SidebarListProps) {
     const fetchListDetail = async () => {
       if (userId && selectedList) {
         try {
-          const docRef = doc(db, `users/${userId}/lists/${selectedList}`);
-
-          const docSnap = await getDoc(docRef);
-
-          if (docSnap.exists()) {
-            setListDetail(docSnap.data());
-          } else {
-            notify({ type: "warning", message: "查無此清單！" });
-            setListDetail(null);
-          }
-
           const itemsRef = collection(
             db,
             `users/${userId}/lists/${selectedList}/places`
@@ -158,11 +147,10 @@ export default function SidebarList({ onExpandChange }: SidebarListProps) {
           setListItems(itemsData);
         } catch (error) {
           console.error("取得清單內容失敗", error);
-          setListDetail(null);
+
           setListItems(null);
         }
       } else {
-        setListDetail(null); // 清空舊的
         setListItems(null);
       }
     };

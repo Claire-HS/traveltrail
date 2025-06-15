@@ -7,7 +7,10 @@ import {
   addDoc,
   where,
   serverTimestamp,
+  setDoc,
   orderBy,
+  getDoc,
+  doc,
 } from "firebase/firestore";
 import { db } from "@/library/firebase";
 import HandlePlan from "@/components/HandlePlan";
@@ -88,30 +91,54 @@ export default function SavePlaceToPlan({
     }
   }, [userId]);
 
-  // 景點加入行程
+  // 景點加入行程(暫存區)
   const handleSave = async (planId: string) => {
     if (!userId) return;
     setIsSavingPlace(true);
     try {
-      const placesRef = collection(
+      const placeRef = doc(
         db,
-        `users/${userId}/plans/${planId}/places`
+        "users",
+        userId,
+        "plans",
+        planId,
+        "tempPlaces",
+        placeData.id //Google Place ID as Firestore 文件ID
       );
 
-      // 檢查景點有無重複(by id)
-      const q = query(placesRef, where("id", "==", placeData.id));
-      const placeSnap = await getDocs(q);
-      if (!placeSnap.empty) {
+      // 檢查是否已存在
+      const existing = await getDoc(placeRef);
+      if (existing.exists()) {
         notify({ type: "warning", message: "地點已存在此行程！" });
         setIsSavingPlace(false);
         return;
       }
 
-      await addDoc(placesRef, {
+      // 若無重複則新增
+      await setDoc(placeRef, {
         ...placeData,
         note: note.trim(),
         createdAt: serverTimestamp(),
       });
+      // const placesRef = collection(
+      //   db,
+      //   `users/${userId}/plans/${planId}/tempPlaces`
+      // );
+
+      // // 檢查景點有無重複(by id)
+      // const q = query(placesRef, where("id", "==", placeData.id));
+      // const placeSnap = await getDocs(q);
+      // if (!placeSnap.empty) {
+      //   notify({ type: "warning", message: "地點已存在此行程！" });
+      //   setIsSavingPlace(false);
+      //   return;
+      // }
+
+      // await addDoc(placesRef, {
+      //   ...placeData,
+      //   note: note.trim(),
+      //   createdAt: serverTimestamp(),
+      // });
 
       setNote("");
       setSelectedPlanId("");

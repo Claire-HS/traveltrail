@@ -407,6 +407,7 @@ export default function Page() {
                 <div key={plan.id} className="flex justify-center">
                   <MyPlanCard
                     key={plan.id}
+                    planId={plan.id}
                     imageSrc="/iceland.jpeg" //待處理
                     title={plan.name}
                     travelDate={

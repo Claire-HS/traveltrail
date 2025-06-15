@@ -22,6 +22,7 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 
 interface CustomCardProps {
+  planId: string;
   imageSrc: string;
   title: string;
   travelDate: string;
@@ -34,6 +35,7 @@ interface CustomCardProps {
 }
 
 export default function MyPlanCard({
+  planId,
   imageSrc,
   title,
   travelDate,
@@ -162,7 +164,10 @@ export default function MyPlanCard({
               fullWidth
               variant="outline"
               color="#2C3E50"
-              disabled
+              onClick={(e) => {
+                e.stopPropagation();
+                router.push(`/planning?id=${planId}`);
+              }}
             >
               編輯行程
             </Button>
