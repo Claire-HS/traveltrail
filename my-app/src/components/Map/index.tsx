@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Paper, CloseButton, Title } from "@mantine/core";
 import SavePlaceToList from "@/components/SavePlaceToList";
 import SavePlaceToPlan from "@/components/SavePlaceToPlan";
 
@@ -157,36 +156,34 @@ const MapWithPlaceAutocomplete = () => {
             const saveToListBtn = document.getElementById("toList-btn");
             const saveToPlanBtn = document.getElementById("toPlan-btn");
 
-            const placeData = {
-              id: place.id,
-              name: place.displayName,
-              address: place.formattedAddress,
-              location: place.location.toJSON(),
-            };
-
             if (saveToListBtn) {
               saveToListBtn.addEventListener("click", async () => {
-                try {
-                  setSelectedPlace(placeData);
-                  setSaveType("list");
-                  setShowSaveModal(true);
-                } catch (error) {
-                  console.error("操作失敗", error);
-                  alert("操作失敗");
-                }
+                const placeData = {
+                  id: place.id,
+                  name: place.displayName,
+                  address: place.formattedAddress,
+                  location: place.location.toJSON(),
+                  photoName: place.photos?.[0]?.name ?? null, // 傳 photoName 而非上傳結果
+                };
+
+                setSelectedPlace(placeData);
+                setSaveType("list");
+                setShowSaveModal(true);
               });
             }
 
             if (saveToPlanBtn) {
               saveToPlanBtn.addEventListener("click", async () => {
-                try {
-                  setSelectedPlace(placeData);
-                  setSaveType("plan");
-                  setShowSaveModal(true);
-                } catch (error) {
-                  console.error("操作失敗", error);
-                  alert("操作失敗");
-                }
+                const placeData = {
+                  id: place.id,
+                  name: place.displayName,
+                  address: place.formattedAddress,
+                  location: place.location.toJSON(),
+                  photoName: place.photos?.[0]?.name ?? null,
+                };
+                setSelectedPlace(placeData);
+                setSaveType("plan");
+                setShowSaveModal(true);
               });
             }
           }, 0);

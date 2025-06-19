@@ -11,10 +11,12 @@ import {
   orderBy,
   getDoc,
   doc,
+  limit,
 } from "firebase/firestore";
 import { db } from "@/library/firebase";
 import HandlePlan from "@/components/HandlePlan";
 import { notify } from "@/utilities/notify";
+import { fetchAndUploadPhoto } from "@/utilities/fetchAndUploadPhoto";
 import {
   Modal,
   Button,
@@ -96,58 +98,68 @@ export default function SavePlaceToPlan({
     if (!userId) return;
     setIsSavingPlace(true);
     try {
-      const placeRef = doc(
+      // 查詢當前最大的 order 值
+      const placesQuery = query(
+        collection(db, "users", userId, "plans", planId, "tempPlaces"),
+        orderBy("order", "desc"),
+        limit(1)
+      );
+      const numSnap = await getDocs(placesQuery);
+      let maxOrder = 0;
+      if (!numSnap.empty) {
+        maxOrder = numSnap.docs[0].data().order || 0;
+      }
+      const placesCol = collection(
         db,
         "users",
         userId,
         "plans",
         planId,
-        "tempPlaces",
-        placeData.id //Google Place ID as Firestore 文件ID
+        "tempPlaces"
       );
 
-      // 檢查是否已存在
-      const existing = await getDoc(placeRef);
-      if (existing.exists()) {
+      // 檢查是否已有相同 placeId（避免重複）
+      const duplicateQuery = query(placesCol, where("id", "==", placeData.id));
+      const duplicateSnap = await getDocs(duplicateQuery);
+      if (!duplicateSnap.empty) {
         notify({ type: "warning", message: "地點已存在此行程！" });
         setIsSavingPlace(false);
         return;
       }
 
+      // 儲存照片
+      let uploadedPhotoUrl: string | null = null;
+      // const firstPhoto = placeData.photos?.[0];
+      if (placeData.photoName && placeData.id) {
+        try {
+          uploadedPhotoUrl = await fetchAndUploadPhoto(
+            placeData.photoName,
+            placeData.id
+          );
+        } catch (error) {
+          console.warn("圖片處理失敗，略過圖片上傳", error);
+        }
+      }
+
       // 若無重複則新增
-      await setDoc(placeRef, {
+      await addDoc(placesCol, {
         ...placeData,
-        note: note.trim(),
+        note: note.trim() || null,
+        photoUrl: uploadedPhotoUrl || null,
+        order: maxOrder + 1, // 新景點的 order 為最大值 + 1
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
-      // const placesRef = collection(
-      //   db,
-      //   `users/${userId}/plans/${planId}/tempPlaces`
-      // );
-
-      // // 檢查景點有無重複(by id)
-      // const q = query(placesRef, where("id", "==", placeData.id));
-      // const placeSnap = await getDocs(q);
-      // if (!placeSnap.empty) {
-      //   notify({ type: "warning", message: "地點已存在此行程！" });
-      //   setIsSavingPlace(false);
-      //   return;
-      // }
-
-      // await addDoc(placesRef, {
-      //   ...placeData,
-      //   note: note.trim(),
-      //   createdAt: serverTimestamp(),
-      // });
-
-      setNote("");
-      setSelectedPlanId("");
 
       notify({ type: "saved", message: "成功加入行程！" });
+      setNote("");
+      setSelectedPlanId("");
       onClose();
     } catch (error) {
       console.error("景點儲存失敗", error);
       notify({ type: "error", message: "加入行程失敗！" });
+      setNote("");
+      setSelectedPlanId("");
     } finally {
       setIsSavingPlace(false);
     }
@@ -165,13 +177,15 @@ export default function SavePlaceToPlan({
 
     try {
       const newPlanRef = await addDoc(collection(db, `users/${userId}/plans`), {
+        userName,
         name,
         startDate: startDate || null,
         endDate: endDate || null,
         note: note?.trim() || null,
+        totalDays: 0, // 新增時預設為0
         isPublic: false, // 新增時預設不公開
         createdAt: serverTimestamp(),
-        userName,
+        updatedAt: serverTimestamp(),
       });
 
       const newPlanId = newPlanRef.id;

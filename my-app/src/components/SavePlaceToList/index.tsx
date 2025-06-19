@@ -13,6 +13,7 @@ import {
 } from "@mantine/core";
 import {
   getDocs,
+  getDoc,
   collection,
   query,
   addDoc,
@@ -21,10 +22,13 @@ import {
   setDoc,
   serverTimestamp,
   orderBy,
+  limit,
 } from "firebase/firestore";
 import { db, auth } from "@/library/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { notify } from "@/utilities/notify";
+import { create } from "domain";
+import { fetchAndUploadPhoto } from "@/utilities/fetchAndUploadPhoto";
 
 interface SavePlaceToListProps {
   placeData: any;
@@ -44,6 +48,7 @@ export default function SavePlaceToList({
   const [userId, setUserId] = useState<string | null>(null);
   const [isSavingPlace, setIsSavingPlace] = useState(false);
   const [isCreatingList, setIsCreatingList] = useState(false);
+  const [uploadedPhotoUrl, setUploadedPhotoUrl] = useState<string | null>(null);
   const lastItemRef = useRef<HTMLDivElement>(null);
 
   const fetchLists = async (uid: string) => {
@@ -77,30 +82,68 @@ export default function SavePlaceToList({
     if (!userId) return;
     setIsSavingPlace(true);
     try {
-      const placesRef = collection(
+      // 查詢當前最大的 order 值
+      const placesQuery = query(
+        collection(db, "users", userId, "lists", listId, "places"),
+        orderBy("order", "desc"),
+        limit(1)
+      );
+      const numSnap = await getDocs(placesQuery);
+      let maxOrder = 0;
+      if (!numSnap.empty) {
+        maxOrder = numSnap.docs[0].data().order || 0;
+      }
+
+      const placesCol = collection(
         db,
-        `users/${userId}/lists/${listId}/places`
+        "users",
+        userId,
+        "lists",
+        listId,
+        "places"
       );
 
-      // 檢查景點有無重複(by id)
-      const q = query(placesRef, where("id", "==", placeData.id));
-      const placeSnap = await getDocs(q);
-      if (!placeSnap.empty) {
+      // 用 placeData.id 檢查是否已存在（避免重複）
+      const duplicateQuery = query(placesCol, where("id", "==", placeData.id));
+      const duplicateSnap = await getDocs(duplicateQuery);
+      if (!duplicateSnap.empty) {
         notify({ type: "warning", message: "地點已存在此清單！" });
+        setIsSavingPlace(false);
         return;
       }
 
-      await addDoc(placesRef, {
+      // 儲存照片
+      let uploadedPhotoUrl: string | null = null;
+      if (placeData.photoName && placeData.id) {
+        try {
+          uploadedPhotoUrl = await fetchAndUploadPhoto(
+            placeData.photoName,
+            placeData.id
+          );
+        } catch (error) {
+          console.warn("圖片處理失敗，略過圖片上傳", error);
+        }
+      }
+
+      // 若無重複則新增（使用 Firestore 自動 ID）
+      await addDoc(placesCol, {
         ...placeData,
-        note: note.trim(),
+        note: note.trim() || null,
+        photoUrl: uploadedPhotoUrl || null,
+        order: maxOrder + 1, // 新景點的 order 為最大值 + 1
         createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       });
-      setNote("");
+
       notify({ type: "saved", message: "成功加入清單！" });
+      setNote("");
+      setSelectedListId("");
       onClose();
     } catch (error) {
       console.error("景點儲存失敗", error);
       notify({ type: "error", message: "加入清單失敗！" });
+      setNote("");
+      setSelectedListId("");
     } finally {
       setIsSavingPlace(false);
     }
@@ -111,9 +154,12 @@ export default function SavePlaceToList({
     if (!newList.trim() || !userId) return;
     setIsCreatingList(true);
     try {
-      const newListRef = doc(collection(db, `users/${userId}/lists`));
-      await setDoc(newListRef, { name: newList.trim() });
-      const newListId = newListRef.id;
+      const docRef = await addDoc(collection(db, `users/${userId}/lists`), {
+        name: newList.trim(),
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+      const newListId = docRef.id;
       setLists((prev) => [...prev, { id: newListId, listName: newList }]); //append list
       setNewList("");
       // notify({ type: "success", message: "新增成功！" });
@@ -124,6 +170,7 @@ export default function SavePlaceToList({
     } catch (error) {
       console.error("新增清單失敗", error);
       notify({ type: "error", message: "新增清單失敗！" });
+      setNewList("");
     } finally {
       setIsCreatingList(false);
     }
