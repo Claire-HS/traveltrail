@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Script from "next/script";
 import { useAuthCheck } from "@/hooks/useAuthCheck";
+import { useUserLists } from "@/hooks/useUserLists";
+import { useListItems } from "@/hooks/useListItems";
+import { usePlanOverview } from "@/hooks/usePlanOverview";
+
 import { useSearchParams } from "next/navigation";
 import { db } from "@/library/firebase";
 import { notify } from "@/utilities/notify";
@@ -29,6 +34,7 @@ import {
   serverTimestamp,
   writeBatch,
   FieldValue,
+  onSnapshot,
 } from "firebase/firestore";
 import {
   Button,
@@ -57,6 +63,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import MapWithPlaceAutocomplete from "@/components/Map";
 import HandlePlan from "@/components/HandlePlan";
 
 interface PlaceWithDocId {
@@ -118,21 +125,34 @@ export default function PlanningPage({
   const user = useAuthCheck();
   const searchParams = useSearchParams();
   const planId = searchParams.get("id");
+  const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [isFetchingLists, setIsFetchingLists] = useState(false);
+  //   const [isFetchingLists, setIsFetchingLists] = useState(false);
   const [isUpdatingPlan, setIsUpdatingPlan] = useState(false);
   const [daysList, setDaysList] = useState<string[]>([]); // 儲存天數列表
   const [isManagingDays, setIsManagingDays] = useState(false);
 
   // 清單相關狀態
-  const [lists, setLists] = useState<Array<{ value: string; label: string }>>(
-    []
-  );
+  //   const [lists, setLists] = useState<Array<{ value: string; label: string }>>(
+  //     []
+  //   );
+  const { lists, isFetchingLists } = useUserLists(user?.uid ?? null);
   const [selectedList, setSelectedList] = useState<string | null>(null);
-  const [isLoadingListItems, setIsLoadingListItems] = useState(false);
+  const { places: selectedListPlaces, isLoadingListItems } = useListItems(
+    user?.uid ?? null,
+    selectedList
+  );
+  //   const [isLoadingListItems, setIsLoadingListItems] = useState(false);
   const [sidebarPlaces, setSidebarPlaces] = useState<PlaceWithDocId[]>([]);
 
   // 行程相關狀態
+  const {
+    info: initPlanInfo,
+    tempData: initTempPlaces,
+    daysListData: initDayList,
+    dayPlacesData: initPlacesData,
+  } = usePlanOverview(user?.uid ?? null, planId);
+
   const [planInfo, setPlanInfo] = useState<PlanInfo | null>(null);
   const [tempPlaces, setTempPlaces] = useState<PlaceWithDocId[]>([]);
   const [dayPlaces, setDayPlaces] = useState<{
@@ -143,6 +163,13 @@ export default function PlanningPage({
   // 拖拽相關狀態
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<PlaceWithDocId | null>(null);
+  //拖拽狀態管理
+  //   const [dragOperation, setDragOperation] = useState({
+  //     isActive: false,
+  //     sourceContainer: null,
+  //     targetContainer: null,
+  //     draggedItemId: null,
+  //   });
 
   // 編輯行程相關狀態
   const [editPlanOpened, { open: openEditPlan, close: closeEditPlan }] =
@@ -161,138 +188,138 @@ export default function PlanningPage({
   );
 
   // 取得收藏清單列表
-  const fetchLists = async (uid: string) => {
-    setIsFetchingLists(true);
-    try {
-      const q = query(
-        collection(db, `users/${uid}/lists`),
-        orderBy("name", "desc")
-      );
-      const docSnap = await getDocs(q);
-      const data = docSnap.docs.map((doc) => ({
-        value: doc.id,
-        label: doc.data().name,
-      }));
-      setLists(data);
-    } catch (error) {
-      console.error("取得清單失敗", error);
-      notify({ type: "error", message: "取得收藏清單失敗，請稍後再試！" });
-      setLists([]);
-    } finally {
-      setIsFetchingLists(false);
-    }
-  };
+  //   const fetchLists = async (uid: string) => {
+  //     setIsFetchingLists(true);
+  //     try {
+  //       const q = query(
+  //         collection(db, `users/${uid}/lists`),
+  //         orderBy("name", "desc")
+  //       );
+  //       const docSnap = await getDocs(q);
+  //       const data = docSnap.docs.map((doc) => ({
+  //         value: doc.id,
+  //         label: doc.data().name,
+  //       }));
+  //       setLists(data);
+  //     } catch (error) {
+  //       console.error("取得清單失敗", error);
+  //       notify({ type: "error", message: "取得收藏清單失敗，請稍後再試！" });
+  //       setLists([]);
+  //     } finally {
+  //       setIsFetchingLists(false);
+  //     }
+  //   };
 
   // 取得個別清單景點
-  const fetchListItemsToSidebar = async (userId: string, listId: string) => {
-    setIsLoadingListItems(true);
-    try {
-      const ref = collection(db, `users/${userId}/lists/${listId}/places`);
-      const q = query(ref, orderBy("order", "asc"));
-      const snap = await getDocs(q);
-      const items = snap.docs.map((doc) => ({
-        docId: doc.id,
-        ...doc.data(),
-      })) as PlaceWithDocId[];
-      setSidebarPlaces(items);
-    } catch (error) {
-      console.error("清單景點讀取錯誤", error);
-      notify({ type: "error", message: "取得清單景點失敗，請稍後再試！" });
-      setSidebarPlaces([]);
-    } finally {
-      setIsLoadingListItems(false);
-    }
-  };
+  //   const fetchListItemsToSidebar = async (userId: string, listId: string) => {
+  //     setIsLoadingListItems(true);
+  //     try {
+  //       const ref = collection(db, `users/${userId}/lists/${listId}/places`);
+  //       const q = query(ref, orderBy("order", "asc"));
+  //       const snap = await getDocs(q);
+  //       const items = snap.docs.map((doc) => ({
+  //         docId: doc.id,
+  //         ...doc.data(),
+  //       })) as PlaceWithDocId[];
+  //       setSidebarPlaces(items);
+  //     } catch (error) {
+  //       console.error("清單景點讀取錯誤", error);
+  //       notify({ type: "error", message: "取得清單景點失敗，請稍後再試！" });
+  //       setSidebarPlaces([]);
+  //     } finally {
+  //       setIsLoadingListItems(false);
+  //     }
+  //   };
 
   // 取得行程總覽及所有相關數據
-  const fetchPlan = async () => {
-    if (!user || !planId) return null;
+  //   const fetchPlan = async () => {
+  //     if (!user || !planId) return null;
 
-    try {
-      // 取得行程基本資料
-      const planRef = doc(db, "users", user.uid, "plans", planId);
-      const planSnap = await getDoc(planRef);
+  //     try {
+  //       // 取得行程基本資料
+  //       const planRef = doc(db, "users", user.uid, "plans", planId);
+  //       const planSnap = await getDoc(planRef);
 
-      if (planSnap.exists()) {
-        const data = planSnap.data();
-        const planInfo: PlanInfo = {
-          name: data.name ?? "",
-          startDate: data.startDate ?? null,
-          endDate: data.endDate ?? null,
-          note: data.note ?? null,
-          days: data.days ?? [],
-        };
-        setPlanInfo(planInfo);
-      }
+  //       if (planSnap.exists()) {
+  //         const data = planSnap.data();
+  //         const planInfo: PlanInfo = {
+  //           name: data.name ?? "",
+  //           startDate: data.startDate ?? null,
+  //           endDate: data.endDate ?? null,
+  //           note: data.note ?? null,
+  //           days: data.days ?? [],
+  //         };
+  //         setPlanInfo(planInfo);
+  //       }
 
-      // 取得暫存景點
-      const tempRef = collection(
-        db,
-        "users",
-        user.uid,
-        "plans",
-        planId,
-        "tempPlaces"
-      );
-      const tempQuery = query(tempRef, orderBy("order", "asc"));
-      const tempSnap = await getDocs(tempQuery);
-      const tempItems = tempSnap.docs.map((doc) => ({
-        docId: doc.id,
-        ...doc.data(),
-      })) as PlaceWithDocId[];
-      setTempPlaces(tempItems);
+  //       // 取得暫存景點
+  //       const tempRef = collection(
+  //         db,
+  //         "users",
+  //         user.uid,
+  //         "plans",
+  //         planId,
+  //         "tempPlaces"
+  //       );
+  //       const tempQuery = query(tempRef, orderBy("order", "asc"));
+  //       const tempSnap = await getDocs(tempQuery);
+  //       const tempItems = tempSnap.docs.map((doc) => ({
+  //         docId: doc.id,
+  //         ...doc.data(),
+  //       })) as PlaceWithDocId[];
+  //       setTempPlaces(tempItems);
 
-      // 取得天數及其景點
-      const daysRef = collection(
-        db,
-        "users",
-        user.uid,
-        "plans",
-        planId,
-        "days"
-      );
-      const daysSnap = await getDocs(daysRef);
+  //       // 取得天數及其景點
+  //       const daysRef = collection(
+  //         db,
+  //         "users",
+  //         user.uid,
+  //         "plans",
+  //         planId,
+  //         "days"
+  //       );
+  //       const daysSnap = await getDocs(daysRef);
 
-      const dayPlacesData: { [key: string]: PlaceWithDocId[] } = {};
-      const daysListData: string[] = [];
+  //       const dayPlacesData: { [key: string]: PlaceWithDocId[] } = {};
+  //       const daysListData: string[] = [];
 
-      for (const dayDoc of daysSnap.docs) {
-        const dayId = dayDoc.id;
-        daysListData.push(dayId);
+  //       for (const dayDoc of daysSnap.docs) {
+  //         const dayId = dayDoc.id;
+  //         daysListData.push(dayId);
 
-        const placesRef = collection(
-          db,
-          "users",
-          user.uid,
-          "plans",
-          planId,
-          "days",
-          dayId,
-          "places"
-        );
-        const placesQuery = query(placesRef, orderBy("order", "asc"));
-        const placesSnap = await getDocs(placesQuery);
+  //         const placesRef = collection(
+  //           db,
+  //           "users",
+  //           user.uid,
+  //           "plans",
+  //           planId,
+  //           "days",
+  //           dayId,
+  //           "places"
+  //         );
+  //         const placesQuery = query(placesRef, orderBy("order", "asc"));
+  //         const placesSnap = await getDocs(placesQuery);
 
-        dayPlacesData[dayId] = placesSnap.docs.map((doc) => ({
-          docId: doc.id,
-          ...doc.data(),
-        })) as PlaceWithDocId[];
-      }
+  //         dayPlacesData[dayId] = placesSnap.docs.map((doc) => ({
+  //           docId: doc.id,
+  //           ...doc.data(),
+  //         })) as PlaceWithDocId[];
+  //       }
 
-      // 按照天數順序排序
-      daysListData.sort((a, b) => {
-        const numA = parseInt(a.replace("day-", ""));
-        const numB = parseInt(b.replace("day-", ""));
-        return numA - numB;
-      });
+  //       // 按照天數順序排序
+  //       daysListData.sort((a, b) => {
+  //         const numA = parseInt(a.replace("day-", ""));
+  //         const numB = parseInt(b.replace("day-", ""));
+  //         return numA - numB;
+  //       });
 
-      setDaysList(daysListData);
-      setDayPlaces(dayPlacesData);
-    } catch (error) {
-      console.error("獲取行程資料失敗：", error);
-      notify({ type: "error", message: "獲取行程總覽失敗" });
-    }
-  };
+  //       setDaysList(daysListData);
+  //       setDayPlaces(dayPlacesData);
+  //     } catch (error) {
+  //       console.error("獲取行程資料失敗：", error);
+  //       notify({ type: "error", message: "獲取行程總覽失敗" });
+  //     }
+  //   };
 
   // 更新行程資訊
   const handleUpdatePlan = async (planInput: PlanInput) => {
@@ -337,11 +364,6 @@ export default function PlanningPage({
   // 處理清單選擇
   const handleSelectList = (listId: string | null) => {
     setSelectedList(listId);
-    if (listId && userId) {
-      fetchListItemsToSidebar(userId, listId);
-    } else {
-      setSidebarPlaces([]);
-    }
   };
 
   // 更新備註
@@ -1419,338 +1441,357 @@ export default function PlanningPage({
   };
 
   useEffect(() => {
-    if (user) {
-      setUserId(user.uid);
-      fetchLists(user.uid);
-      fetchPlan();
+    if (typeof window !== "undefined" && window.google?.maps) {
+      setIsGoogleLoaded(true);
     }
-  }, [user, planId]);
+  }, []);
 
   useEffect(() => {
-    if (userId && selectedList) {
-      fetchListItemsToSidebar(userId, selectedList);
-    } else {
-      setSidebarPlaces([]);
+    if (user) {
+      setUserId(user.uid);
+      //   fetchLists(user.uid);
+      //   fetchPlan();
     }
-  }, [selectedList, userId]);
+  }, [user]);
 
+  useEffect(() => {
+    if (selectedListPlaces) {
+      setSidebarPlaces(selectedListPlaces);
+    }
+  }, [selectedListPlaces]);
+
+  useEffect(() => {
+    if (initPlanInfo) setPlanInfo(initPlanInfo);
+    if (initTempPlaces) setTempPlaces(initTempPlaces);
+    if (initDayList) setDaysList(initDayList);
+    if (initPlacesData) setDayPlaces(initPlacesData);
+  }, [initPlanInfo, initTempPlaces, initDayList, initPlacesData]);
   if (user === undefined) return null;
 
   return (
-    <div className="h-[calc(100vh-160px)] w-[98vw] mt-5 shadow-lg shadow-foreground/50 relative flex flex-col md:flex-row gap-3">
-      <div className="w-full md:w-[800px] bg-gray-100 px-1">
-        {/* 地圖內容 */}
-      </div>
+    <>
+      <Script
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&v=beta&libraries=places`}
+        strategy="afterInteractive"
+        onLoad={() => {
+          setIsGoogleLoaded(true); // 確保 google 載入完成後再渲染地圖
+        }}
+      />
+      <div className="h-[calc(100vh-160px)] w-[98vw] mt-5 shadow-lg shadow-foreground/50 relative flex flex-col md:flex-row gap-3">
+        <div className="w-full md:w-[800px] bg-gray-100 px-1">
+          {user && isGoogleLoaded && <MapWithPlaceAutocomplete />}
+        </div>
 
-      {/* 主要內容區塊 */}
-      <div className="flex flex-1 py-2 gap-2 justify-center">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          {/* Sidebar - 景點清單容器 */}
-          <div className="w-[400px] bg-gray-200 p-4 h-full rounded-lg">
-            <div className="mb-2">
-              <Select
-                label="選擇清單:"
-                checkIconPosition="left"
-                value={selectedList}
-                onChange={handleSelectList}
-                data={lists}
-                placeholder="選擇一個收藏清單"
-                clearable
-                searchable
-                nothingFoundMessage="找不到清單"
-                // isLoading={isFetchingLists}
-                className="mb-4"
-              />
+        {/* 主要內容區塊 */}
+        <div className="flex flex-1 py-2 gap-2 justify-center">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            {/* Sidebar - 景點清單容器 */}
+            <div className="w-[400px] bg-gray-200 p-4 h-full rounded-lg">
+              <div className="mb-2">
+                <Select
+                  label="選擇清單:"
+                  checkIconPosition="left"
+                  value={selectedList}
+                  onChange={handleSelectList}
+                  data={lists}
+                  placeholder="選擇一個收藏清單"
+                  clearable
+                  searchable
+                  nothingFoundMessage="找不到清單"
+                  // isLoading={isFetchingLists}
+                  className="mb-4"
+                />
+              </div>
+
+              <Droppable id="sidebar-container">
+                <div className="flex-1 p-2 pr-3 rounded-lg border border-gray-200 bg-white overflow-y-auto h-[calc(100%-80px)]">
+                  {isLoadingListItems ? (
+                    <div className="h-full flex items-center justify-center">
+                      <Loader size="md" />
+                    </div>
+                  ) : sidebarPlaces.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-gray-400">
+                      <div className="text-center">
+                        <div className="text-4xl mb-2">📋</div>
+                        <p className="text-sm">
+                          {selectedList ? "此清單尚無景點" : "請選擇收藏清單"}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <SortableContext
+                      items={sidebarPlaces.map((place) => place.docId)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2">
+                        {sidebarPlaces.map((item) => (
+                          <DraggableItem
+                            key={item.docId}
+                            placeData={item}
+                            onDelete={handleDelete}
+                            onUpdateNote={handleUpdateNote}
+                            currentContainer="sidebar"
+                            onMove={handleMove}
+                            availableContainers={getAvailableContainers()}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  )}
+                </div>
+              </Droppable>
             </div>
 
-            <Droppable id="sidebar-container">
-              <div className="flex-1 p-2 pr-3 rounded-lg border border-gray-200 bg-white overflow-y-auto h-[calc(100%-80px)]">
-                {isLoadingListItems ? (
-                  <div className="h-full flex items-center justify-center">
-                    <Loader size="md" />
-                  </div>
-                ) : sidebarPlaces.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-gray-400">
-                    <div className="text-center">
-                      <div className="text-4xl mb-2">📋</div>
-                      <p className="text-sm">
-                        {selectedList ? "此清單尚無景點" : "請選擇收藏清單"}
-                      </p>
+            {/* Itinerary - 行程容器 */}
+            <div className="w-[400px] bg-blue-50 h-full px-3 rounded-lg">
+              {/* 行程標題區塊 */}
+              {planInfo && (
+                <div className="border rounded-xl p-4 mt-4 shadow-sm bg-white">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xl font-semibold text-gray-900">
+                      <span>{planInfo.name || "未命名行程"}</span>
+                      <Button
+                        size="compact-xs"
+                        variant="outline"
+                        color="blue"
+                        className="hover:bg-blue-50 transition"
+                        onClick={handleEditPlan}
+                        disabled={isUpdatingPlan}
+                      >
+                        <IconEdit size={16} />
+                      </Button>
                     </div>
+
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">旅遊日期：</span>
+                      {planInfo.startDate && planInfo.endDate
+                        ? `${planInfo.startDate} ～ ${planInfo.endDate}`
+                        : "日期未定"}
+                    </div>
+
+                    {planInfo.note && (
+                      <div className="text-sm text-gray-600">
+                        <span className="font-medium">備註：</span>
+                        {planInfo.note}
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <SortableContext
-                    items={sidebarPlaces.map((place) => place.docId)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    <div className="space-y-2">
-                      {sidebarPlaces.map((item) => (
-                        <DraggableItem
-                          key={item.docId}
-                          placeData={item}
-                          onDelete={handleDelete}
-                          onUpdateNote={handleUpdateNote}
-                          currentContainer="sidebar"
-                          onMove={handleMove}
-                          availableContainers={getAvailableContainers()}
+                </div>
+              )}
+              {/* 分頁標籤 */}
+              <div className="flex border-b my-2  overflow-x-auto bg-white rounded-t-lg relative">
+                <button
+                  className={` px-2 pt-3 pb-1 text-sm font-medium whitespace-nowrap transition-colors ${
+                    activeTab === "temp"
+                      ? "border-b-2 border-blue-700 text-gray-700 bg-blue-200"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                  onClick={() => setActiveTab("temp")}
+                >
+                  暫存 ({tempPlaces.length})
+                </button>
+
+                {daysList.map((dayId) => (
+                  <div key={dayId} className="relative group flex-shrink-0">
+                    <button
+                      className={`px-2 pt-3 pb-1 text-sm font-medium whitespace-nowrap transition-colors ${
+                        activeTab === dayId
+                          ? "border-b-2 border-blue-500 text-gray-700 bg-blue-200"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                      onClick={() => setActiveTab(dayId)}
+                    >
+                      Day-{dayId.replace("day-", "")} (
+                      {dayPlaces[dayId]?.length || 0})
+                    </button>
+
+                    {/* 刪除天數按鈕 - 只在該天數頁面顯示 */}
+                    {activeTab === dayId && daysList.length > 0 && (
+                      <button
+                        onClick={() => removeDay(dayId)}
+                        disabled={isManagingDays}
+                        className="absolute -top-0 -right-1 rounded-full "
+                        title={`刪除第 ${dayId.replace("day-", "")} 天`}
+                      >
+                        <IconXboxXFilled
+                          size={20}
+                          className="text-red-400 flex-shrink-0 hover:text-red-600 rounded-full  transition-colors opacity-0 group-hover:opacity-100"
                         />
-                      ))}
+                      </button>
+                    )}
+                  </div>
+                ))}
+
+                {/* 新增天數按鈕 */}
+                <button
+                  onClick={addNewDay}
+                  disabled={isManagingDays}
+                  className="px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors flex items-center gap-1"
+                  title="新增天數"
+                >
+                  <IconPlus size={16} />
+                </button>
+              </div>
+              {/* 內容區塊 */}
+              <div className="bg-white rounded-lg shadow-sm h-[calc(100%-200px)]">
+                {/* 暫存景點頁面 */}
+                {activeTab === "temp" && (
+                  <Droppable id="temp-container">
+                    <div className="p-4 h-full overflow-y-auto">
+                      <h3 className="text-lg font-semibold mb-4 text-center text-gray-800">
+                        暫存景點
+                      </h3>
+
+                      {tempPlaces.length === 0 ? (
+                        <div className="h-full flex items-center justify-center text-gray-400">
+                          <div className="text-center">
+                            <div className="text-4xl mb-2">📋</div>
+                            <p className="text-sm">暫存區為空</p>
+                            <p className="text-xs text-gray-300 mt-1">
+                              從景點清單拖拽景點到此處暫存
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <SortableContext
+                          items={tempPlaces.map((place) => place.docId)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="space-y-2">
+                            {tempPlaces.map((item) => (
+                              <DraggableItem
+                                key={item.docId}
+                                placeData={item}
+                                onDelete={handleDelete}
+                                onUpdateNote={handleUpdateNote}
+                                currentContainer="temp"
+                                onMove={handleMove}
+                                availableContainers={getAvailableContainers()}
+                              />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      )}
                     </div>
-                  </SortableContext>
+                  </Droppable>
+                )}
+
+                {/* 天數頁面 */}
+                {activeTab !== "temp" && daysList.includes(activeTab) && (
+                  <Droppable id={`${activeTab}-container`}>
+                    <div className="p-4 h-full overflow-y-auto">
+                      <h3 className="text-lg font-semibold mb-4 text-center text-gray-800">
+                        第 {activeTab.replace("day-", "")} 天
+                      </h3>
+
+                      {(dayPlaces[activeTab]?.length || 0) === 0 ? (
+                        <div className="h-full flex items-center justify-center text-gray-400">
+                          <div className="text-center">
+                            <div className="text-4xl mb-2">📅</div>
+                            <p className="text-sm">尚未安排行程</p>
+                            <p className="text-xs text-gray-300 mt-1">
+                              從暫存區或清單拖拽景點到此處
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <SortableContext
+                          items={(dayPlaces[activeTab] || []).map(
+                            (place) => place.docId
+                          )}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          <div className="space-y-2">
+                            {(dayPlaces[activeTab] || []).map((item, index) => (
+                              <div key={item.docId} className="relative">
+                                <div className="absolute left-0 top-0 bg-blue-100 text-blue-800 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center z-10">
+                                  {index + 1}
+                                </div>
+                                <div className="ml-2">
+                                  <DraggableItem
+                                    placeData={item}
+                                    onDelete={handleDelete}
+                                    onUpdateNote={handleUpdateNote}
+                                    currentContainer={activeTab}
+                                    onMove={handleMove}
+                                    availableContainers={getAvailableContainers()}
+                                  />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </SortableContext>
+                      )}
+                    </div>
+                  </Droppable>
                 )}
               </div>
-            </Droppable>
-          </div>
-
-          {/* Itinerary - 行程容器 */}
-          <div className="w-[400px] bg-blue-50 h-full px-3 rounded-lg">
-            {/* 行程標題區塊 */}
-            {planInfo && (
-              <div className="border rounded-xl p-4 mt-4 shadow-sm bg-white">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-xl font-semibold text-gray-900">
-                    <span>{planInfo.name || "未命名行程"}</span>
-                    <Button
-                      size="compact-xs"
-                      variant="outline"
-                      color="blue"
-                      className="hover:bg-blue-50 transition"
-                      onClick={handleEditPlan}
-                      disabled={isUpdatingPlan}
-                    >
-                      <IconEdit size={16} />
-                    </Button>
-                  </div>
-
-                  <div className="text-sm text-gray-600">
-                    <span className="font-medium">旅遊日期：</span>
-                    {planInfo.startDate && planInfo.endDate
-                      ? `${planInfo.startDate} ～ ${planInfo.endDate}`
-                      : "日期未定"}
-                  </div>
-
-                  {planInfo.note && (
-                    <div className="text-sm text-gray-600">
-                      <span className="font-medium">備註：</span>
-                      {planInfo.note}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            {/* 分頁標籤 */}
-            <div className="flex border-b my-2  overflow-x-auto bg-white rounded-t-lg relative">
-              <button
-                className={` px-2 pt-3 pb-1 text-sm font-medium whitespace-nowrap transition-colors ${
-                  activeTab === "temp"
-                    ? "border-b-2 border-blue-700 text-gray-700 bg-blue-200"
-                    : "text-gray-500 hover:text-gray-700"
-                }`}
-                onClick={() => setActiveTab("temp")}
-              >
-                暫存 ({tempPlaces.length})
-              </button>
-
-              {daysList.map((dayId) => (
-                <div key={dayId} className="relative group flex-shrink-0">
-                  <button
-                    className={`px-2 pt-3 pb-1 text-sm font-medium whitespace-nowrap transition-colors ${
-                      activeTab === dayId
-                        ? "border-b-2 border-blue-500 text-gray-700 bg-blue-200"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                    onClick={() => setActiveTab(dayId)}
-                  >
-                    Day-{dayId.replace("day-", "")} (
-                    {dayPlaces[dayId]?.length || 0})
-                  </button>
-
-                  {/* 刪除天數按鈕 - 只在該天數頁面顯示 */}
-                  {activeTab === dayId && daysList.length > 0 && (
-                    <button
-                      onClick={() => removeDay(dayId)}
-                      disabled={isManagingDays}
-                      className="absolute -top-0 -right-1 rounded-full "
-                      title={`刪除第 ${dayId.replace("day-", "")} 天`}
-                    >
-                      <IconXboxXFilled
-                        size={20}
-                        className="text-red-400 flex-shrink-0 hover:text-red-600 rounded-full  transition-colors opacity-0 group-hover:opacity-100"
-                      />
-                    </button>
-                  )}
-                </div>
-              ))}
-
-              {/* 新增天數按鈕 */}
-              <button
-                onClick={addNewDay}
-                disabled={isManagingDays}
-                className="px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 transition-colors flex items-center gap-1"
-                title="新增天數"
-              >
-                <IconPlus size={16} />
-              </button>
             </div>
-            {/* 內容區塊 */}
-            <div className="bg-white rounded-lg shadow-sm h-[calc(100%-200px)]">
-              {/* 暫存景點頁面 */}
-              {activeTab === "temp" && (
-                <Droppable id="temp-container">
-                  <div className="p-4 h-full overflow-y-auto">
-                    <h3 className="text-lg font-semibold mb-4 text-center text-gray-800">
-                      暫存景點
-                    </h3>
 
-                    {tempPlaces.length === 0 ? (
-                      <div className="h-full flex items-center justify-center text-gray-400">
-                        <div className="text-center">
-                          <div className="text-4xl mb-2">📋</div>
-                          <p className="text-sm">暫存區為空</p>
-                          <p className="text-xs text-gray-300 mt-1">
-                            從景點清單拖拽景點到此處暫存
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <SortableContext
-                        items={tempPlaces.map((place) => place.docId)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        <div className="space-y-2">
-                          {tempPlaces.map((item) => (
-                            <DraggableItem
-                              key={item.docId}
-                              placeData={item}
-                              onDelete={handleDelete}
-                              onUpdateNote={handleUpdateNote}
-                              currentContainer="temp"
-                              onMove={handleMove}
-                              availableContainers={getAvailableContainers()}
-                            />
-                          ))}
-                        </div>
-                      </SortableContext>
-                    )}
-                  </div>
-                </Droppable>
-              )}
-
-              {/* 天數頁面 */}
-              {activeTab !== "temp" && daysList.includes(activeTab) && (
-                <Droppable id={`${activeTab}-container`}>
-                  <div className="p-4 h-full overflow-y-auto">
-                    <h3 className="text-lg font-semibold mb-4 text-center text-gray-800">
-                      第 {activeTab.replace("day-", "")} 天
-                    </h3>
-
-                    {(dayPlaces[activeTab]?.length || 0) === 0 ? (
-                      <div className="h-full flex items-center justify-center text-gray-400">
-                        <div className="text-center">
-                          <div className="text-4xl mb-2">📅</div>
-                          <p className="text-sm">尚未安排行程</p>
-                          <p className="text-xs text-gray-300 mt-1">
-                            從暫存區或清單拖拽景點到此處
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <SortableContext
-                        items={(dayPlaces[activeTab] || []).map(
-                          (place) => place.docId
-                        )}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        <div className="space-y-2">
-                          {(dayPlaces[activeTab] || []).map((item, index) => (
-                            <div key={item.docId} className="relative">
-                              <div className="absolute left-0 top-0 bg-blue-100 text-blue-800 text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center z-10">
-                                {index + 1}
-                              </div>
-                              <div className="ml-2">
-                                <DraggableItem
-                                  placeData={item}
-                                  onDelete={handleDelete}
-                                  onUpdateNote={handleUpdateNote}
-                                  currentContainer={activeTab}
-                                  onMove={handleMove}
-                                  availableContainers={getAvailableContainers()}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </SortableContext>
-                    )}
-                  </div>
-                </Droppable>
-              )}
-            </div>
-          </div>
-
-          {/* 拖拽預覽 */}
-          <DragOverlay>
-            {activeItem && (
-              <div className="relative h-auto p-3 rounded-lg border-2 border-blue-300 bg-white shadow-xl w-[360px] max-w-full opacity-90">
-                <div className="flex gap-3">
-                  <div className="w-[80px] h-[60px] bg-gray-200 rounded-md flex items-center justify-center text-xs text-gray-500 flex-shrink-0">
-                    {activeItem.photoUrl ? (
-                      <img
-                        src={activeItem.photoUrl}
-                        alt={activeItem.name}
-                        className="w-full h-full object-cover rounded-md"
-                      />
-                    ) : (
-                      "無圖片"
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-y-1 flex-1 overflow-hidden">
-                    <div className="font-medium text-sm truncate">
-                      {activeItem.name}
+            {/* 拖拽預覽 */}
+            <DragOverlay>
+              {activeItem && (
+                <div className="relative h-auto p-3 rounded-lg border-2 border-blue-300 bg-white shadow-xl w-[360px] max-w-full opacity-90">
+                  <div className="flex gap-3">
+                    <div className="w-[80px] h-[60px] bg-gray-200 rounded-md flex items-center justify-center text-xs text-gray-500 flex-shrink-0">
+                      {activeItem.photoUrl ? (
+                        <img
+                          src={activeItem.photoUrl}
+                          alt={activeItem.name}
+                          className="w-full h-full object-cover rounded-md"
+                        />
+                      ) : (
+                        "無圖片"
+                      )}
                     </div>
-                    <div className="text-xs text-gray-600 truncate">
-                      {activeItem.address}
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <IconNotes
-                        size={12}
-                        className="text-gray-400 flex-shrink-0"
-                      />
-                      <div className="text-xs text-gray-500 truncate">
-                        {activeItem.note || "尚無備註"}
+
+                    <div className="flex flex-col gap-y-1 flex-1 overflow-hidden">
+                      <div className="font-medium text-sm truncate">
+                        {activeItem.name}
+                      </div>
+                      <div className="text-xs text-gray-600 truncate">
+                        {activeItem.address}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <IconNotes
+                          size={12}
+                          className="text-gray-400 flex-shrink-0"
+                        />
+                        <div className="text-xs text-gray-500 truncate">
+                          {activeItem.note || "尚無備註"}
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-          </DragOverlay>
-        </DndContext>
-      </div>
+              )}
+            </DragOverlay>
+          </DndContext>
+        </div>
 
-      {/* 編輯行程 */}
-      <Modal
-        opened={editPlanOpened}
-        onClose={closeEditPlan}
-        title="修改行程資訊"
-        size="md"
-        centered
-      >
-        <HandlePlan
+        {/* 編輯行程 */}
+        <Modal
+          opened={editPlanOpened}
           onClose={closeEditPlan}
-          onSubmit={handleUpdatePlan}
-          defaultData={editPlanData}
-          mode="edit"
-          isLoading={isUpdatingPlan}
-        />
-      </Modal>
-    </div>
+          title="修改行程資訊"
+          size="md"
+          centered
+        >
+          <HandlePlan
+            onClose={closeEditPlan}
+            onSubmit={handleUpdatePlan}
+            defaultData={editPlanData}
+            mode="edit"
+            isLoading={isUpdatingPlan}
+          />
+        </Modal>
+      </div>
+    </>
   );
 }
 
