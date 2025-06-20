@@ -4,7 +4,10 @@
 // 確認各頁RWD
 // planning 未選擇清單時，不可加入景點
 
-// "use client";
+"use client";
+export default function SharingPage() {
+  return <div>Sharing Page</div>;
+}
 
 // import React, { useState } from "react";
 // import {
