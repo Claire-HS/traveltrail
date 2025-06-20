@@ -6,7 +6,6 @@ import { useAuthCheck } from "@/hooks/useAuthCheck";
 import { useUserLists } from "@/hooks/useUserLists";
 import { useListItems } from "@/hooks/useListItems";
 import { usePlanOverview } from "@/hooks/usePlanOverview";
-
 import { useSearchParams } from "next/navigation";
 import { db } from "@/library/firebase";
 import { notify } from "@/utilities/notify";
@@ -34,7 +33,6 @@ import {
   serverTimestamp,
   writeBatch,
   FieldValue,
-  onSnapshot,
 } from "firebase/firestore";
 import {
   Button,
@@ -107,35 +105,18 @@ interface PlanInfo extends PlanInput {
   days?: any[];
 }
 
-// interface DayInfo {
-//   dayId: string;
-//   title: string;
-//   date: string | null;
-//   places: PlaceWithDocId[];
-// }
-
-export default function PlanningPage({
-  onDeleteItem,
-  onUpdateNote,
-}: {
-  onDeleteItem: (docId: string) => void;
-  onUpdateNote: (docId: string, newNote: string | null) => void;
-}) {
+export default function PlanningPage() {
   // 狀態管理
   const user = useAuthCheck();
   const searchParams = useSearchParams();
   const planId = searchParams.get("id");
   const [isGoogleLoaded, setIsGoogleLoaded] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  //   const [isFetchingLists, setIsFetchingLists] = useState(false);
   const [isUpdatingPlan, setIsUpdatingPlan] = useState(false);
   const [daysList, setDaysList] = useState<string[]>([]); // 儲存天數列表
   const [isManagingDays, setIsManagingDays] = useState(false);
 
   // 清單相關狀態
-  //   const [lists, setLists] = useState<Array<{ value: string; label: string }>>(
-  //     []
-  //   );
   const { lists, isFetchingLists } = useUserLists(user?.uid ?? null);
   const [selectedList, setSelectedList] = useState<string | null>(null);
   const { places: selectedListPlaces, isLoadingListItems } = useListItems(
@@ -163,13 +144,6 @@ export default function PlanningPage({
   // 拖拽相關狀態
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeItem, setActiveItem] = useState<PlaceWithDocId | null>(null);
-  //拖拽狀態管理
-  //   const [dragOperation, setDragOperation] = useState({
-  //     isActive: false,
-  //     sourceContainer: null,
-  //     targetContainer: null,
-  //     draggedItemId: null,
-  //   });
 
   // 編輯行程相關狀態
   const [editPlanOpened, { open: openEditPlan, close: closeEditPlan }] =
@@ -186,140 +160,6 @@ export default function PlanningPage({
       },
     })
   );
-
-  // 取得收藏清單列表
-  //   const fetchLists = async (uid: string) => {
-  //     setIsFetchingLists(true);
-  //     try {
-  //       const q = query(
-  //         collection(db, `users/${uid}/lists`),
-  //         orderBy("name", "desc")
-  //       );
-  //       const docSnap = await getDocs(q);
-  //       const data = docSnap.docs.map((doc) => ({
-  //         value: doc.id,
-  //         label: doc.data().name,
-  //       }));
-  //       setLists(data);
-  //     } catch (error) {
-  //       console.error("取得清單失敗", error);
-  //       notify({ type: "error", message: "取得收藏清單失敗，請稍後再試！" });
-  //       setLists([]);
-  //     } finally {
-  //       setIsFetchingLists(false);
-  //     }
-  //   };
-
-  // 取得個別清單景點
-  //   const fetchListItemsToSidebar = async (userId: string, listId: string) => {
-  //     setIsLoadingListItems(true);
-  //     try {
-  //       const ref = collection(db, `users/${userId}/lists/${listId}/places`);
-  //       const q = query(ref, orderBy("order", "asc"));
-  //       const snap = await getDocs(q);
-  //       const items = snap.docs.map((doc) => ({
-  //         docId: doc.id,
-  //         ...doc.data(),
-  //       })) as PlaceWithDocId[];
-  //       setSidebarPlaces(items);
-  //     } catch (error) {
-  //       console.error("清單景點讀取錯誤", error);
-  //       notify({ type: "error", message: "取得清單景點失敗，請稍後再試！" });
-  //       setSidebarPlaces([]);
-  //     } finally {
-  //       setIsLoadingListItems(false);
-  //     }
-  //   };
-
-  // 取得行程總覽及所有相關數據
-  //   const fetchPlan = async () => {
-  //     if (!user || !planId) return null;
-
-  //     try {
-  //       // 取得行程基本資料
-  //       const planRef = doc(db, "users", user.uid, "plans", planId);
-  //       const planSnap = await getDoc(planRef);
-
-  //       if (planSnap.exists()) {
-  //         const data = planSnap.data();
-  //         const planInfo: PlanInfo = {
-  //           name: data.name ?? "",
-  //           startDate: data.startDate ?? null,
-  //           endDate: data.endDate ?? null,
-  //           note: data.note ?? null,
-  //           days: data.days ?? [],
-  //         };
-  //         setPlanInfo(planInfo);
-  //       }
-
-  //       // 取得暫存景點
-  //       const tempRef = collection(
-  //         db,
-  //         "users",
-  //         user.uid,
-  //         "plans",
-  //         planId,
-  //         "tempPlaces"
-  //       );
-  //       const tempQuery = query(tempRef, orderBy("order", "asc"));
-  //       const tempSnap = await getDocs(tempQuery);
-  //       const tempItems = tempSnap.docs.map((doc) => ({
-  //         docId: doc.id,
-  //         ...doc.data(),
-  //       })) as PlaceWithDocId[];
-  //       setTempPlaces(tempItems);
-
-  //       // 取得天數及其景點
-  //       const daysRef = collection(
-  //         db,
-  //         "users",
-  //         user.uid,
-  //         "plans",
-  //         planId,
-  //         "days"
-  //       );
-  //       const daysSnap = await getDocs(daysRef);
-
-  //       const dayPlacesData: { [key: string]: PlaceWithDocId[] } = {};
-  //       const daysListData: string[] = [];
-
-  //       for (const dayDoc of daysSnap.docs) {
-  //         const dayId = dayDoc.id;
-  //         daysListData.push(dayId);
-
-  //         const placesRef = collection(
-  //           db,
-  //           "users",
-  //           user.uid,
-  //           "plans",
-  //           planId,
-  //           "days",
-  //           dayId,
-  //           "places"
-  //         );
-  //         const placesQuery = query(placesRef, orderBy("order", "asc"));
-  //         const placesSnap = await getDocs(placesQuery);
-
-  //         dayPlacesData[dayId] = placesSnap.docs.map((doc) => ({
-  //           docId: doc.id,
-  //           ...doc.data(),
-  //         })) as PlaceWithDocId[];
-  //       }
-
-  //       // 按照天數順序排序
-  //       daysListData.sort((a, b) => {
-  //         const numA = parseInt(a.replace("day-", ""));
-  //         const numB = parseInt(b.replace("day-", ""));
-  //         return numA - numB;
-  //       });
-
-  //       setDaysList(daysListData);
-  //       setDayPlaces(dayPlacesData);
-  //     } catch (error) {
-  //       console.error("獲取行程資料失敗：", error);
-  //       notify({ type: "error", message: "獲取行程總覽失敗" });
-  //     }
-  //   };
 
   // 更新行程資訊
   const handleUpdatePlan = async (planInput: PlanInput) => {
@@ -1449,8 +1289,6 @@ export default function PlanningPage({
   useEffect(() => {
     if (user) {
       setUserId(user.uid);
-      //   fetchLists(user.uid);
-      //   fetchPlan();
     }
   }, [user]);
 
@@ -1503,7 +1341,7 @@ export default function PlanningPage({
                   clearable
                   searchable
                   nothingFoundMessage="找不到清單"
-                  // isLoading={isFetchingLists}
+                  //   isLoading={isFetchingLists}
                   className="mb-4"
                 />
               </div>
