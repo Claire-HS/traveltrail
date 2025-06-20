@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { Loader } from "@mantine/core";
 import SavePlaceToList from "@/components/SavePlaceToList";
 import SavePlaceToPlan from "@/components/SavePlaceToPlan";
 
@@ -16,6 +17,7 @@ type PlaceData = {
 const center = { lat: 23.7, lng: 121.0 }; // 台灣中央
 
 const MapWithPlaceAutocomplete = () => {
+  const [isMapLoading, setIsMapLoading] = useState<boolean>(true);
   const mapRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<google.maps.Map | null>(null);
@@ -192,6 +194,14 @@ const MapWithPlaceAutocomplete = () => {
     };
 
     initMap();
+    const timer = setTimeout(() => {
+      // 這裡是兩秒後要執行的程式碼
+      console.log("2 秒過去了！");
+      setIsMapLoading(false);
+    }, 2000); // 2000 毫秒 = 2 秒
+
+    // 清除 timeout，避免記憶體洩漏
+
     return () => {
       destroyed = true;
 
@@ -205,44 +215,54 @@ const MapWithPlaceAutocomplete = () => {
       mapInstance.current = null;
       markerInstance.current = null;
       infoWindowInstance.current = null;
+
+      clearTimeout(timer);
     };
   }, []);
 
   return (
-    <div className="h-full w-full">
-      <div
-        ref={cardRef}
-        id="place-autocomplete-card"
-        className="p-1 w-full max-w-xs mt-2 ml-2 mx-auto bg-white shadow-md rounded-md"
-        style={{
-          minHeight: "40px", // 預估高度
-          visibility: "hidden",
-        }}
-      />
-      <div ref={mapRef} id="map" className="h-[calc(100vh-160px)] w-full" />
-
-      {saveType === "list" ? (
-        <SavePlaceToList
-          placeData={selectedPlace}
-          opened={showSaveModal}
-          onClose={() => {
-            setShowSaveModal(false);
-            setSelectedPlace(null);
-            setSaveType(null);
-          }}
-        />
-      ) : (
-        <SavePlaceToPlan
-          placeData={selectedPlace}
-          opened={showSaveModal}
-          onClose={() => {
-            setShowSaveModal(false);
-            setSelectedPlace(null);
-            setSaveType(null);
-          }}
-        />
+    <>
+      {isMapLoading && (
+        <div className="h-full w-full flex items-center justify-center">
+          <Loader />
+        </div>
       )}
-    </div>
+      <div
+        className={`h-full w-full ${isMapLoading ? "invisible" : "visible"}`}
+      >
+        <div
+          ref={cardRef}
+          id="place-autocomplete-card"
+          className="p-1 w-full max-w-xs mt-2 ml-2 mx-auto bg-white shadow-md rounded-md"
+          style={{
+            minHeight: "40px", // 預估高度
+            visibility: "hidden",
+          }}
+        />
+        <div ref={mapRef} id="map" className="h-[calc(100vh-160px)] w-full" />;
+        {saveType === "list" ? (
+          <SavePlaceToList
+            placeData={selectedPlace}
+            opened={showSaveModal}
+            onClose={() => {
+              setShowSaveModal(false);
+              setSelectedPlace(null);
+              setSaveType(null);
+            }}
+          />
+        ) : (
+          <SavePlaceToPlan
+            placeData={selectedPlace}
+            opened={showSaveModal}
+            onClose={() => {
+              setShowSaveModal(false);
+              setSelectedPlace(null);
+              setSaveType(null);
+            }}
+          />
+        )}
+      </div>
+    </>
   );
 };
 
