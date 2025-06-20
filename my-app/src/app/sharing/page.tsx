@@ -1,735 +1,388 @@
+// planning 從地圖新增景點後，右邊區塊未能刷新 => 清單列表OK 清單項目OK 暫存區OK 目前問題區域間拖曳重覆渲染(db寫入正確)
+// sharing頁面
+// planning RWD
+// 確認各頁RWD
+// planning 未選擇清單時，不可加入景點
+
 // "use client";
 
-// import { useState, useEffect } from "react";
-// import { useAuthCheck } from "@/hooks/useAuthCheck";
-// import { useSearchParams } from "next/navigation";
-// import { db } from "@/library/firebase";
-// import { notify } from "@/utilities/notify";
+// import React, { useState } from "react";
 // import {
-//   IconSettings,
-//   IconNotes,
-//   IconEdit,
-//   IconGripVertical,
-//   IconCheck,
-//   IconX,
-//   IconTrash,
+//   IconCalendar,
+//   IconClock,
+//   IconMapPin,
+//   IconShare,
+//   IconHeart,
+//   IconEye,
 // } from "@tabler/icons-react";
-// import { useDisclosure } from "@mantine/hooks";
-// import {
-//   getDocs,
-//   getDoc,
-//   collection,
-//   setDoc,
-//   query,
-//   doc,
-//   deleteDoc,
-//   updateDoc,
-//   orderBy,
-//   Timestamp,
-//   serverTimestamp,
-//   writeBatch,
-//   FieldValue,
-// } from "firebase/firestore";
-// import {
-//   ActionIcon,
-//   Button,
-//   Group,
-//   Select,
-//   Loader,
-//   Flex,
-//   Modal,
-// } from "@mantine/core";
-// import {
-//   DndContext,
-//   DragEndEvent,
-//   DragStartEvent,
-//   DragOverEvent,
-//   DragOverlay,
-//   useSensor,
-//   useSensors,
-//   PointerSensor,
-//   closestCorners,
-//   useDroppable,
-// } from "@dnd-kit/core";
-// import {
-//   useSortable,
-//   SortableContext,
-//   verticalListSortingStrategy,
-// } from "@dnd-kit/sortable";
-// import { CSS } from "@dnd-kit/utilities";
-// // import DraggableItem from "@/components/DraggableItem";
-// import HandlePlan from "@/components/HandlePlan";
 
-// // 定義項目的數據結構
-// interface Item {
-//   id: string;
-//   title: string;
-//   description: string;
-//   type: "attraction" | "restaurant" | "hotel" | "activity";
-//   duration?: number;
-//   location?: string;
-// }
+// const TravelItineraryUI = () => {
+//   const [selectedDay, setSelectedDay] = useState(0);
 
-// // 定義容器的數據結構
-// interface Container {
-//   id: string;
-//   title: string;
-//   items: Item[];
-//   type: "sidebar" | "itinerary";
-// }
-
-// // 可拖拽項目組件
-// function DraggableItem({
-//   item,
-//   onEdit,
-//   onDelete,
-// }: {
-//   item: Item;
-//   onEdit: (item: Item) => void;
-//   onDelete: (id: string) => void;
-// }) {
-//   const {
-//     attributes,
-//     listeners,
-//     setNodeRef,
-//     transform,
-//     transition,
-//     isDragging,
-//   } = useSortable({
-//     id: item.id,
-//   });
-
-//   const style = {
-//     transform: CSS.Transform.toString(transform),
-//     transition,
-//     opacity: isDragging ? 0.5 : 1,
-//   };
-
-//   const typeColors = {
-//     attraction: "bg-blue-100 border-blue-300",
-//     restaurant: "bg-orange-100 border-orange-300",
-//     hotel: "bg-purple-100 border-purple-300",
-//     activity: "bg-green-100 border-green-300",
-//   };
-
-//   const typeEmojis = {
-//     attraction: "🏛️",
-//     restaurant: "🍽️",
-//     hotel: "🏨",
-//     activity: "🎯",
-//   };
-
-//   return (
-//     <div
-//       ref={setNodeRef}
-//       style={style}
-//       className={`p-3 mb-2 rounded-lg border-2 cursor-grab active:cursor-grabbing group
-//         ${typeColors[item.type]} hover:shadow-md transition-all relative`}
-//     >
-//       {/* 拖拽區域 */}
-//       <div {...attributes} {...listeners} className="flex items-start gap-2">
-//         <span className="text-lg">{typeEmojis[item.type]}</span>
-//         <div className="flex-1">
-//           <h4 className="font-semibold text-gray-800 text-sm">{item.title}</h4>
-//           <p className="text-xs text-gray-600 mt-1">{item.description}</p>
-//           {item.location && (
-//             <p className="text-xs text-gray-500 mt-1">📍 {item.location}</p>
-//           )}
-//           {item.duration && (
-//             <p className="text-xs text-gray-500 mt-1">
-//               ⏱️ {item.duration} 分鐘
-//             </p>
-//           )}
-//         </div>
-//       </div>
-
-//       {/* 操作按鈕 */}
-//       <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-//         <button
-//           onClick={(e) => {
-//             e.stopPropagation();
-//             onEdit(item);
-//           }}
-//           className="p-1 bg-white rounded shadow-md hover:bg-gray-50 cursor-pointer"
-//           title="編輯"
-//         >
-//           <span className="text-xs">✏️</span>
-//         </button>
-//         <button
-//           onClick={(e) => {
-//             e.stopPropagation();
-//             if (confirm("確定要刪除這個項目嗎？")) {
-//               onDelete(item.id);
-//             }
-//           }}
-//           className="p-1 bg-white rounded shadow-md hover:bg-gray-50 cursor-pointer"
-//           title="刪除"
-//         >
-//           <span className="text-xs">🗑️</span>
-//         </button>
-//       </div>
-//     </div>
-//   );
-// }
-
-// // 可放置的容器組件
-// function DroppableContainer({
-//   container,
-//   children,
-//   onAddItem,
-// }: {
-//   container: Container;
-//   children: React.ReactNode;
-//   onAddItem?: () => void;
-// }) {
-//   const { setNodeRef, isOver } = useDroppable({
-//     id: container.id,
-//   });
-
-//   return (
-//     <div
-//       className={`${
-//         container.type === "sidebar" ? "w-80" : "flex-1"
-//       } min-h-[500px]`}
-//     >
-//       <div
-//         ref={setNodeRef}
-//         className={`bg-gray-50 rounded-lg p-4 h-full border-2 border-dashed transition-colors
-//           ${isOver ? "border-blue-400 bg-blue-50" : "border-gray-200"}`}
-//       >
-//         <div className="flex items-center justify-between mb-4">
-//           <h3 className="text-lg font-bold text-gray-800">{container.title}</h3>
-//           <div className="flex items-center gap-2">
-//             <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-sm font-medium">
-//               {container.items.length} 項目
-//             </span>
-//             {container.type === "sidebar" && onAddItem && (
-//               <button
-//                 onClick={onAddItem}
-//                 className="p-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-//                 title="新增項目"
-//               >
-//                 <span className="text-sm">➕</span>
-//               </button>
-//             )}
-//           </div>
-//         </div>
-
-//         <SortableContext
-//           items={container.items.map((item) => item.id)}
-//           strategy={verticalListSortingStrategy}
-//         >
-//           <div className="space-y-2 flex-1 min-h-[400px]">
-//             {children}
-
-//             {/* 空列表時的提示區域 */}
-//             {container.items.length === 0 && (
-//               <div className="flex-1 flex items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 rounded-lg py-12">
-//                 <div className="text-center">
-//                   <div className="text-4xl mb-2">
-//                     {container.type === "sidebar" ? "📋" : "📅"}
-//                   </div>
-//                   <p className="text-sm">
-//                     {container.type === "sidebar"
-//                       ? "點擊 + 新增項目"
-//                       : "將項目拖拽到這裡"}
-//                   </p>
-//                 </div>
-//               </div>
-//             )}
-//           </div>
-//         </SortableContext>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default function ItineraryDragDrop() {
-//   const [isMounted, setIsMounted] = useState(false);
-//   const [activeTab, setActiveTab] = useState("temp");
-//   const [dayCount, setDayCount] = useState(3);
-//   const [editingItem, setEditingItem] = useState<Item | null>(null);
-//   const [isAddingItem, setIsAddingItem] = useState(false);
-//   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-
-//   // 初始化數據
-//   const [containers, setContainers] = useState<Container[]>([
-//     {
-//       id: "sidebar",
-//       title: "景點清單",
-//       type: "sidebar",
-//       items: [
-//         {
-//           id: "1",
-//           title: "台北101",
-//           description: "台北地標摩天大樓",
-//           type: "attraction",
-//           duration: 120,
-//           location: "信義區",
-//         },
-//         {
-//           id: "2",
-//           title: "鼎泰豐",
-//           description: "知名小籠包餐廳",
-//           type: "restaurant",
-//           duration: 90,
-//           location: "信義區",
-//         },
-//         {
-//           id: "3",
-//           title: "故宮博物院",
-//           description: "中華文物典藏",
-//           type: "attraction",
-//           duration: 180,
-//           location: "士林區",
-//         },
-//       ],
-//     },
-//     {
-//       id: "temp",
-//       title: "暫存區",
-//       type: "itinerary",
-//       items: [],
-//     },
-//     ...Array.from({ length: dayCount }, (_, i) => ({
-//       id: `day-${i + 1}`,
-//       title: `第 ${i + 1} 天`,
-//       type: "itinerary" as const,
-//       items: [] as Item[],
-//     })),
-//   ]);
-
-//   const [activeItem, setActiveItem] = useState<Item | null>(null);
-
-//   const sensors = useSensors(
-//     useSensor(PointerSensor, {
-//       activationConstraint: {
-//         distance: 8,
+//   // 模擬行程資料
+//   const itinerary = {
+//     title: "北海道",
+//     dates: "2024-10-21 - 2024-10-25",
+//     tags: ["札幌", "富良野", "小樽"],
+//     author: "aaa",
+//     days: [
+//       {
+//         date: "2024/10/21",
+//         weekday: "一",
+//         locations: [
+//           {
+//             id: 1,
+//             name: "新千歲機場",
+//             address: "Bibi, Chitose, Hokkaido 066-0012日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "51 分鐘",
+//             type: "transport",
+//           },
+//           {
+//             id: 2,
+//             name: "札幌啤酒博物館",
+//             address:
+//               "9-chōme-1-1 Kita 7 Jōhigashi, Higashi Ward, Sapporo, Hokkaido 065-8633日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "8 分鐘",
+//             type: "attraction",
+//           },
+//           {
+//             id: 3,
+//             name: "札幌市時計台",
+//             address:
+//               "2 Chome Kita 1 Jonishi, Chuo Ward, Sapporo, Hokkaido 060-0001日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "4 分鐘",
+//             type: "attraction",
+//           },
+//           {
+//             id: 4,
+//             name: "大通公園",
+//             address: "日本〒060-0042 北海道札幌市中央区大通西１〜１２丁目",
+//             image: "/api/placeholder/80/60",
+//             duration: "",
+//             type: "park",
+//           },
+//         ],
 //       },
-//     })
-//   );
-
-//   useEffect(() => {
-//     setIsMounted(true);
-//     // 這裡可以加載資料庫資料
-//     // loadItinerariesFromDB();
-//   }, []);
-
-//   // 當天數改變時更新容器
-//   useEffect(() => {
-//     setContainers((prev) => {
-//       const sidebar = prev.find((c) => c.id === "sidebar");
-//       const temp = prev.find((c) => c.id === "temp");
-//       const existingDays = prev.filter((c) => c.id.startsWith("day-"));
-
-//       const dayContainers = Array.from({ length: dayCount }, (_, i) => {
-//         const dayId = `day-${i + 1}`;
-//         const existingDay = existingDays.find((d) => d.id === dayId);
-
-//         return (
-//           existingDay || {
-//             id: dayId,
-//             title: `第 ${i + 1} 天`,
-//             type: "itinerary" as const,
-//             items: [] as Item[],
-//           }
-//         );
-//       });
-
-//       return [sidebar!, temp!, ...dayContainers];
-//     });
-//   }, [dayCount]);
-
-//   // API 函數們 - 在實際專案中這些會呼叫後端 API
-//   const saveItinerariesToDB = async (data: Container[]) => {
-//     try {
-//       // 模擬 API 呼叫
-//       console.log("儲存行程到資料庫:", data);
-//       // const response = await fetch('/api/itineraries', {
-//       //   method: 'POST',
-//       //   headers: { 'Content-Type': 'application/json' },
-//       //   body: JSON.stringify(data)
-//       // });
-//       // return response.json();
-//       setHasUnsavedChanges(false);
-//       alert("行程已儲存！");
-//     } catch (error) {
-//       console.error("儲存失敗:", error);
-//       alert("儲存失敗，請重試");
-//     }
+//       {
+//         date: "2024/10/22",
+//         weekday: "二",
+//         locations: [
+//           {
+//             id: 5,
+//             name: "白金青池",
+//             address:
+//               "Shirogane, Biei, Kamikawa District, Hokkaido 071-0235日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "17 分鐘",
+//             type: "nature",
+//           },
+//           {
+//             id: 6,
+//             name: "四季彩之丘",
+//             address:
+//               "日本〒071-0473 Hokkaido, Kamikawa District, Biei, Shinsei, 第3",
+//             image: "/api/placeholder/80/60",
+//             duration: "21 分鐘",
+//             type: "attraction",
+//           },
+//           {
+//             id: 7,
+//             name: "富田農場",
+//             address:
+//               "15 Kisenkita, Nakafurano, Sorachi District, Hokkaido 071-0704日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "23 分鐘",
+//             type: "farm",
+//           },
+//           {
+//             id: 8,
+//             name: "森林精靈露台",
+//             address: "Nakagoryo, Furano, Hokkaido 076-8511日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "",
+//             type: "attraction",
+//           },
+//         ],
+//       },
+//       {
+//         date: "2024/10/23",
+//         weekday: "三",
+//         locations: [
+//           {
+//             id: 9,
+//             name: "白色戀人公園",
+//             address:
+//               "2-chōme-11-36 Miyanosawa 2 Jo, Nishi Ward, Sapporo, Hokkaido 063-0052日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "19 分鐘",
+//             type: "theme_park",
+//           },
+//           {
+//             id: 10,
+//             name: "北海道大學",
+//             address:
+//               "5 Chome Kita 8 Jonishi, Kita Ward, Sapporo, Hokkaido 060-0808日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "41 分鐘",
+//             type: "university",
+//           },
+//           {
+//             id: 11,
+//             name: "頭大佛殿",
+//             address: "2 Takino, Minami Ward, Sapporo, Hokkaido 005-0862日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "25 分鐘",
+//             type: "temple",
+//           },
+//           {
+//             id: 12,
+//             name: "三井OUTLET PARK 札幌北廣",
+//             address:
+//               "3-chōme-7-6 Omagariisawaicho, Kitahiroshima, Hokkaido 061-1278日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "",
+//             type: "shopping",
+//           },
+//         ],
+//       },
+//       {
+//         date: "2024/10/24",
+//         weekday: "四",
+//         locations: [
+//           {
+//             id: 13,
+//             name: "LeTAO 總店",
+//             address: "7-16 Sakaimachi, Otaru, Hokkaido 047-0027日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "1 分鐘",
+//             type: "shop",
+//           },
+//           {
+//             id: 14,
+//             name: "小樽北菓樓 總店",
+//             address: "7-22 Sakaimachi, Otaru, Hokkaido 047-0027日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "0 分鐘",
+//             type: "shop",
+//           },
+//           {
+//             id: 15,
+//             name: "六花亭 小樽運河店",
+//             address: "7-22 Sakaimachi, Otaru, Hokkaido 047-0027日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "3 分鐘",
+//             type: "shop",
+//           },
+//           {
+//             id: 16,
+//             name: "小樽運河",
+//             address: "5 Minatomachi, Otaru, Hokkaido 047-0007日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "19 分鐘",
+//             type: "landmark",
+//           },
+//           {
+//             id: 17,
+//             name: "天狗山",
+//             address: "日本〒047-0012 北海道小樽市 Tenguyama, 2 Chome, 天狗山",
+//             image: "/api/placeholder/80/60",
+//             duration: "",
+//             type: "mountain",
+//           },
+//         ],
+//       },
+//       {
+//         date: "2024/10/25",
+//         weekday: "五",
+//         locations: [
+//           {
+//             id: 18,
+//             name: "新千歲機場",
+//             address: "Bibi, Chitose, Hokkaido 066-0012日本",
+//             image: "/api/placeholder/80/60",
+//             duration: "",
+//             type: "transport",
+//           },
+//         ],
+//       },
+//     ],
 //   };
 
-//   // CRUD 操作函數
-//   const handleEditItem = (item: Item) => {
-//     setEditingItem(item);
-//   };
-
-//   const handleDeleteItem = (itemId: string) => {
-//     setContainers((prev) =>
-//       prev.map((container) => ({
-//         ...container,
-//         items: container.items.filter((item) => item.id !== itemId),
-//       }))
-//     );
-//     setHasUnsavedChanges(true);
-//   };
-
-//   const handleSaveItem = (item: Item) => {
-//     if (editingItem) {
-//       // 編輯現有項目
-//       setContainers((prev) =>
-//         prev.map((container) => ({
-//           ...container,
-//           items: container.items.map((existingItem) =>
-//             existingItem.id === item.id ? item : existingItem
-//           ),
-//         }))
-//       );
-//     } else {
-//       // 新增項目到側邊欄
-//       setContainers((prev) =>
-//         prev.map((container) =>
-//           container.id === "sidebar"
-//             ? { ...container, items: [...container.items, item] }
-//             : container
-//         )
-//       );
-//     }
-//     setEditingItem(null);
-//     setIsAddingItem(false);
-//     setHasUnsavedChanges(true);
-//   };
-
-//   const handleAddNewItem = () => {
-//     setIsAddingItem(true);
-//     setEditingItem(null);
-//   };
-
-//   const handleCancelEdit = () => {
-//     setEditingItem(null);
-//     setIsAddingItem(false);
-//   };
-
-//   if (!isMounted) {
-//     return (
-//       <div className="p-6 max-w-7xl mx-auto">
-//         <div className="mb-6">
-//           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-//             行程規劃系統
-//           </h1>
-//           <p className="text-gray-600">載入中...</p>
+//   const LocationCard = ({ location, isLast }) => (
+//     <div className="bg-white rounded-lg border border-gray-200 p-3 mb-3 shadow-sm hover:shadow-md transition-shadow">
+//       <div className="flex gap-3">
+//         <div className="flex-shrink-0">
+//           <img
+//             src={location.image}
+//             alt={location.name}
+//             className="w-16 h-16 rounded-lg object-cover bg-gray-200"
+//           />
 //         </div>
-//       </div>
-//     );
-//   }
-
-//   // 拖拽處理函數（保持原有邏輯）
-//   const findContainer = (id: string) => {
-//     for (const container of containers) {
-//       if (container.items.some((item) => item.id === id)) {
-//         return container.id;
-//       }
-//     }
-//     return null;
-//   };
-
-//   const handleDragStart = (event: DragStartEvent) => {
-//     const { active } = event;
-//     const activeContainer = findContainer(active.id as string);
-//     if (activeContainer) {
-//       const container = containers.find((c) => c.id === activeContainer);
-//       const item = container?.items.find((item) => item.id === active.id);
-//       setActiveItem(item || null);
-//     }
-//   };
-
-//   const handleDragOver = (event: DragOverEvent) => {
-//     const { active, over } = event;
-//     if (!over) return;
-
-//     const activeId = active.id as string;
-//     const overId = over.id as string;
-
-//     const activeContainer = findContainer(activeId);
-//     const overContainer = findContainer(overId) || overId;
-
-//     if (
-//       !activeContainer ||
-//       !overContainer ||
-//       activeContainer === overContainer
-//     ) {
-//       return;
-//     }
-
-//     setContainers((prev) => {
-//       const activeContainerIndex = prev.findIndex(
-//         (c) => c.id === activeContainer
-//       );
-//       const overContainerIndex = prev.findIndex((c) => c.id === overContainer);
-
-//       if (activeContainerIndex === -1 || overContainerIndex === -1) return prev;
-
-//       const activeItems = [...prev[activeContainerIndex].items];
-//       const overItems = [...prev[overContainerIndex].items];
-
-//       const activeItemIndex = activeItems.findIndex(
-//         (item) => item.id === activeId
-//       );
-//       const activeItem = activeItems[activeItemIndex];
-
-//       activeItems.splice(activeItemIndex, 1);
-//       overItems.push(activeItem);
-
-//       const newContainers = [...prev];
-//       newContainers[activeContainerIndex] = {
-//         ...prev[activeContainerIndex],
-//         items: activeItems,
-//       };
-//       newContainers[overContainerIndex] = {
-//         ...prev[overContainerIndex],
-//         items: overItems,
-//       };
-
-//       return newContainers;
-//     });
-//     setHasUnsavedChanges(true);
-//   };
-
-//   const handleDragEnd = (event: DragEndEvent) => {
-//     const { active, over } = event;
-//     setActiveItem(null);
-
-//     if (!over) return;
-
-//     const activeId = active.id as string;
-//     const overId = over.id as string;
-
-//     const activeContainer = findContainer(activeId);
-//     const overContainer = findContainer(overId) || overId;
-
-//     if (!activeContainer) return;
-
-//     if (activeContainer === overContainer) {
-//       setContainers((prev) => {
-//         const containerIndex = prev.findIndex((c) => c.id === activeContainer);
-//         const items = [...prev[containerIndex].items];
-
-//         const activeIndex = items.findIndex((item) => item.id === activeId);
-//         const overIndex = items.findIndex((item) => item.id === overId);
-
-//         if (activeIndex !== overIndex) {
-//           const [removed] = items.splice(activeIndex, 1);
-//           items.splice(overIndex, 0, removed);
-//         }
-
-//         const newContainers = [...prev];
-//         newContainers[containerIndex] = {
-//           ...prev[containerIndex],
-//           items,
-//         };
-
-//         return newContainers;
-//       });
-//       setHasUnsavedChanges(true);
-//     }
-//   };
-
-//   const tabs = [
-//     { id: "temp", label: "行程總覽" },
-//     ...Array.from({ length: dayCount }, (_, i) => ({
-//       id: `day-${i + 1}`,
-//       label: `第 ${i + 1} 天`,
-//     })),
-//   ];
-
-//   const currentItineraryContainer = containers.find((c) => c.id === activeTab);
-//   const sidebarContainer = containers.find((c) => c.id === "sidebar");
-
-//   return (
-//     <div className="p-6 max-w-7xl mx-auto">
-//       <div className="mb-6">
-//         <div className="flex items-center justify-between mb-4">
-//           <div>
-//             <h1 className="text-2xl font-bold text-gray-900 mb-2">
-//               行程規劃系統
-//             </h1>
-//             <p className="text-gray-600">
-//               從左側景點清單拖拽項目到右側行程規劃區域
-//             </p>
-//           </div>
-
-//           {/* 儲存按鈕 */}
-//           <button
-//             onClick={() => saveItinerariesToDB(containers)}
-//             className={`px-4 py-2 rounded-md flex items-center gap-2 ${
-//               hasUnsavedChanges
-//                 ? "bg-blue-500 text-white hover:bg-blue-600"
-//                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
-//             }`}
-//             disabled={!hasUnsavedChanges}
-//           >
-//             💾 {hasUnsavedChanges ? "儲存變更" : "已儲存"}
-//           </button>
-//         </div>
-
-//         {/* 天數控制 */}
-//         <div className="flex items-center gap-4 mb-4">
-//           <label className="text-sm font-medium text-gray-700">
-//             行程天數：
-//           </label>
-//           <div className="flex items-center gap-2">
-//             <button
-//               onClick={() => setDayCount(Math.max(1, dayCount - 1))}
-//               className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm"
-//             >
-//               -
-//             </button>
-//             <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded text-sm font-medium">
-//               {dayCount} 天
-//             </span>
-//             <button
-//               onClick={() => setDayCount(Math.min(14, dayCount + 1))}
-//               className="px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm"
-//             >
-//               +
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-
-//       <DndContext
-//         sensors={sensors}
-//         collisionDetection={closestCorners}
-//         onDragStart={handleDragStart}
-//         onDragOver={handleDragOver}
-//         onDragEnd={handleDragEnd}
-//       >
-//         <div className="flex gap-6">
-//           {/* Sidebar 區域 */}
-//           {sidebarContainer && (
-//             <DroppableContainer
-//               container={sidebarContainer}
-//               onAddItem={handleAddNewItem}
-//             >
-//               {sidebarContainer.items.map((item) => (
-//                 <DraggableItem
-//                   key={item.id}
-//                   item={item}
-//                   onEdit={handleEditItem}
-//                   onDelete={handleDeleteItem}
-//                 />
-//               ))}
-//             </DroppableContainer>
+//         <div className="flex-1 min-w-0">
+//           <h4 className="font-medium text-gray-900 text-sm mb-1 truncate">
+//             {location.name}
+//           </h4>
+//           <p className="text-xs text-gray-500 mb-2 line-clamp-2">
+//             {location.address}
+//           </p>
+//           {location.duration && (
+//             <div className="flex items-center gap-1 text-xs text-gray-600">
+//               <IconClock size={12} />
+//               <span>開車 {location.duration}</span>
+//             </div>
 //           )}
-
-//           {/* Itinerary 區域 */}
-//           <div className="flex-1">
-//             {/* 分頁標籤 */}
-//             <div className="mb-4">
-//               <div className="border-b border-gray-200">
-//                 <nav className="-mb-px flex space-x-8">
-//                   {tabs.map((tab) => (
-//                     <button
-//                       key={tab.id}
-//                       onClick={() => setActiveTab(tab.id)}
-//                       className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-//                         activeTab === tab.id
-//                           ? "border-blue-500 text-blue-600"
-//                           : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-//                       }`}
-//                     >
-//                       {tab.label}
-//                       {containers.find((c) => c.id === tab.id)?.items.length! >
-//                         0 && (
-//                         <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-//                           {
-//                             containers.find((c) => c.id === tab.id)?.items
-//                               .length
-//                           }
-//                         </span>
-//                       )}
-//                     </button>
-//                   ))}
-//                 </nav>
-//               </div>
-//             </div>
-
-//             {/* 預留空白區域 */}
-//             <div
-//               className={`mb-4 ${
-//                 activeTab === "temp" ? "h-32" : "h-24"
-//               } bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center`}
-//             >
-//               <div className="text-center text-gray-500">
-//                 <div className="text-2xl mb-2">
-//                   {activeTab === "temp" ? "📊" : "📅"}
-//                 </div>
-//                 <p className="text-sm">
-//                   {activeTab === "temp"
-//                     ? "行程總覽統計區域"
-//                     : `第${activeTab.replace("day-", "")}天行程資訊`}
-//                 </p>
-//               </div>
-//             </div>
-
-//             {/* 當前分頁內容 */}
-//             {currentItineraryContainer && (
-//               <DroppableContainer container={currentItineraryContainer}>
-//                 {currentItineraryContainer.items.map((item) => (
-//                   <DraggableItem
-//                     key={item.id}
-//                     item={item}
-//                     onEdit={handleEditItem}
-//                     onDelete={handleDeleteItem}
-//                   />
-//                 ))}
-//               </DroppableContainer>
-//             )}
-//           </div>
 //         </div>
-
-//         <DragOverlay>
-//           {activeItem ? (
-//             <div className="p-3 mb-2 rounded-lg border-2 bg-white shadow-lg">
-//               <div className="flex items-start gap-2">
-//                 <span className="text-lg">
-//                   {activeItem.type === "attraction" && "🏛️"}
-//                   {activeItem.type === "restaurant" && "🍽️"}
-//                   {activeItem.type === "hotel" && "🏨"}
-//                   {activeItem.type === "activity" && "🎯"}
-//                 </span>
-//                 <div className="flex-1">
-//                   <h4 className="font-semibold text-gray-800 text-sm">
-//                     {activeItem.title}
-//                   </h4>
-//                   <p className="text-xs text-gray-600 mt-1">
-//                     {activeItem.description}
-//                   </p>
-//                   {activeItem.location && (
-//                     <p className="text-xs text-gray-500 mt-1">
-//                       📍 {activeItem.location}
-//                     </p>
-//                   )}
-//                   {activeItem.duration && (
-//                     <p className="text-xs text-gray-500 mt-1">
-//                       ⏱️ {activeItem.duration} 分鐘
-//                     </p>
-//                   )}
-//                 </div>
-//               </div>
-//             </div>
-//           ) : null}
-//         </DragOverlay>
-//       </DndContext>
-
-//       {/* 編輯表單彈窗 */}
-//       {/* {(editingItem || isAddingItem) && (
-//         <ItemEditForm
-//           item={editingItem}
-//           onSave={handleSaveItem}
-//           onCancel={handleCancelEdit}
-//         />
-//       )} */}
+//       </div>
+//       {!isLast && (
+//         <div className="flex justify-center mt-3">
+//           <div className="w-px h-4 bg-gray-300"></div>
+//         </div>
+//       )}
 //     </div>
 //   );
-// }
+
+//   return (
+//     <div className="min-h-screen bg-gray-50">
+//       {/* Header */}
+//       <div className="bg-white border-b border-gray-200 p-4">
+//         <div className="max-w-6xl mx-auto">
+//           <div className="flex items-center justify-between mb-4">
+//             <h1 className="text-2xl font-bold text-gray-900">
+//               {itinerary.title}
+//             </h1>
+//             <div className="flex items-center gap-2">
+//               <button className="p-2 rounded-full hover:bg-gray-100">
+//                 <IconHeart size={20} className="text-gray-600" />
+//               </button>
+//               <button className="p-2 rounded-full hover:bg-gray-100">
+//                 <IconShare size={20} className="text-gray-600" />
+//               </button>
+//             </div>
+//           </div>
+
+//           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+//             <div className="flex items-center gap-4 text-sm text-gray-600">
+//               <div className="flex items-center gap-1">
+//                 <IconCalendar size={16} />
+//                 <span>{itinerary.dates}</span>
+//               </div>
+//               <div className="flex gap-2">
+//                 {itinerary.tags.map((tag, index) => (
+//                   <span
+//                     key={index}
+//                     className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs"
+//                   >
+//                     {tag}
+//                   </span>
+//                 ))}
+//               </div>
+//             </div>
+//             <div className="text-sm text-gray-500">
+//               分享者：{itinerary.author}
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Main Content */}
+//       <div className="max-w-6xl mx-auto p-4">
+//         {/* Day Navigation - Horizontal Scroll */}
+//         <div className="mb-6">
+//           <div className="flex overflow-x-auto gap-2 pb-2 scrollbar-hide">
+//             {itinerary.days.map((day, index) => (
+//               <button
+//                 key={index}
+//                 onClick={() => setSelectedDay(index)}
+//                 className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+//                   selectedDay === index
+//                     ? "bg-blue-500 text-white"
+//                     : "bg-white text-gray-700 border border-gray-200 hover:bg-gray-50"
+//                 }`}
+//               >
+//                 {day.date.split("/").slice(1).join("/")} ({day.weekday})
+//               </button>
+//             ))}
+//           </div>
+//         </div>
+
+//         {/* Desktop View */}
+//         <div className="hidden lg:block">
+//           <div className="grid grid-cols-5 gap-6">
+//             {itinerary.days.map((day, dayIndex) => (
+//               <div key={dayIndex} className="space-y-3">
+//                 <div className="text-center mb-4">
+//                   <h3 className="font-semibold text-gray-900">
+//                     {day.date.split("/").slice(1).join("/")} ({day.weekday})
+//                   </h3>
+//                 </div>
+//                 <div className="space-y-3">
+//                   {day.locations.map((location, locationIndex) => (
+//                     <LocationCard
+//                       key={location.id}
+//                       location={location}
+//                       isLast={locationIndex === day.locations.length - 1}
+//                     />
+//                   ))}
+//                 </div>
+//               </div>
+//             ))}
+//           </div>
+//         </div>
+
+//         {/* Mobile/Tablet View */}
+//         <div className="lg:hidden">
+//           <div className="bg-white rounded-lg border border-gray-200 p-4">
+//             <div className="text-center mb-4">
+//               <h3 className="font-semibold text-gray-900">
+//                 {itinerary.days[selectedDay].date.split("/").slice(1).join("/")}{" "}
+//                 ({itinerary.days[selectedDay].weekday})
+//               </h3>
+//             </div>
+//             <div className="space-y-3">
+//               {itinerary.days[selectedDay].locations.map(
+//                 (location, locationIndex) => (
+//                   <LocationCard
+//                     key={location.id}
+//                     location={location}
+//                     isLast={
+//                       locationIndex ===
+//                       itinerary.days[selectedDay].locations.length - 1
+//                     }
+//                   />
+//                 )
+//               )}
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* Footer */}
+//       <footer className="bg-teal-100 text-center py-4 mt-8">
+//         <p className="text-sm text-gray-600">
+//           Copyright @2024 WeHelp #5 Drag to Travel
+//         </p>
+//       </footer>
+
+//       <style jsx>{`
+//         .scrollbar-hide {
+//           -ms-overflow-style: none;
+//           scrollbar-width: none;
+//         }
+//         .scrollbar-hide::-webkit-scrollbar {
+//           display: none;
+//         }
+//         .line-clamp-2 {
+//           display: -webkit-box;
+//           -webkit-line-clamp: 2;
+//           -webkit-box-orient: vertical;
+//           overflow: hidden;
+//         }
+//       `}</style>
+//     </div>
+//   );
+// };
+
+// export default TravelItineraryUI;
