@@ -203,7 +203,12 @@ export default function PlanningPage() {
 
   // 處理清單選擇
   const handleSelectList = (listId: string | null) => {
-    setSelectedList(listId);
+    if (listId) {
+      setSelectedList(listId);
+    } else {
+      setSelectedList(null);
+      setSidebarPlaces([]);
+    }
   };
 
   // 更新備註
