@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import AuthModal from "@/components/AuthModal";
 import { useUser } from "@/context/UserContext";
 import { notify } from "@/utilities/notify";
+import { IconCalendarCheck } from "@tabler/icons-react";
 // import { useDisclosure } from "@mantine/hooks";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -30,14 +31,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         >
           TravelTrail
         </div>
-        <div className="w-xs h-full  pr-4 flex text-2xl font-semibold flex items-center justify-between bg-background text-foreground">
+        <div className="w-xs h-full  pr-4 flex text-2xl font-semibold flex items-center justify-end gap-2 bg-background text-foreground">
           <div
-            className="w-[110px] px-1 rounded-xl flex justify-center border cursor-pointer"
+            className="px-1 rounded-xl border cursor-pointer"
             onClick={handleClick}
           >
-            我的行程
+            行程
           </div>
-          <div className="w-[110px] px-1 rounded-xl flex justify-center border">
+          <div className="px-1 rounded-xl  border">
             <AuthModal buttonClassName="w-full cursor-pointer"></AuthModal>
           </div>
         </div>

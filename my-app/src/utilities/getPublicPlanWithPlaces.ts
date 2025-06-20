@@ -14,11 +14,8 @@ export async function getPublicPlanWithPlaces(
 ) {
   if (!planId || !userId) return null;
 
-  const fullPath = `users/${userId}/plans/${planId}`;
-  const q = query(
-    collectionGroup(db, "plans"),
-    where(documentId(), "==", fullPath)
-  );
+  // const fullPath = `users/${userId}/plans/${planId}`;
+  const q = query(collectionGroup(db, "plans"), where("isPublic", "==", true));
 
   const snap = await getDocs(q);
   if (snap.empty) return null;

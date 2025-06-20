@@ -239,7 +239,7 @@ const MapWithPlaceAutocomplete = () => {
             visibility: "hidden",
           }}
         />
-        <div ref={mapRef} id="map" className="h-[calc(100vh-160px)] w-full" />;
+        <div ref={mapRef} id="map" className="h-[calc(100vh-160px)] w-full" />
         {saveType === "list" ? (
           <SavePlaceToList
             placeData={selectedPlace}

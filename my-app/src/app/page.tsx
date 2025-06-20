@@ -48,11 +48,11 @@ export default function Home() {
           </Button>
         </div>
       </div>
-      <div className="px-10 mt-5 relative flex flex-col">
-        <div className="text-4xl font-bold flex items-center text-foreground">
+      <div className="px-10 mt-5  flex flex-col items-center">
+        <div className="text-4xl font-bold flex  text-foreground text-center">
           行程靈感
         </div>
-        <div className="w-96 absolute top-10 left-1/2 transform -translate-x-1/2">
+        <div className="w-96 mt-4 ">
           <SearchInput
             placeholder="看看其他人怎麼玩 👀?"
             leftSection={<IconSearch color="#8C6E63" size={32} />}
@@ -60,7 +60,7 @@ export default function Home() {
         </div>
         <div className="w-full pb-15 flex flex-col justify-center items-center min-h-[500px]">
           <PublicPlansGrid />
-          <div className="mt-20">
+          <div className="mt-8">
             <Box maw={1200} mx="auto">
               <Group justify="center" mb={20}>
                 <Button

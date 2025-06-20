@@ -1,7 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
 import { Timestamp } from "firebase/firestore";
-import { Text, Divider } from "@mantine/core";
+import { Divider } from "@mantine/core";
 
 export interface PlaceData {
   placeId: string;
@@ -37,14 +36,13 @@ export interface PlanType {
   totalDays: number;
   days: PlanDay[];
 }
-
 export default function PublicPlaceCard({ planData }: { planData: PlanType }) {
   return (
     <>
       <div className="mt-8 flex flex-col items-center justify-center">
         <div className="text-2xl font-medium mb-2">{planData.name}</div>
         <div className="text-lg text-gray-500 font-medium mb-2">
-          {planData.note}
+          {`${planData.startDate} ~ ${planData.endDate}`}
         </div>
         <div className="text-lg text-gray-500 font-medium">
           作者：{planData.userName}
@@ -52,12 +50,16 @@ export default function PublicPlaceCard({ planData }: { planData: PlanType }) {
       </div>
       <Divider my="sm" className="my-4" />
 
-      <div className="flex w-full gap-4  p-4 overflow-x-auto ">
-        {planData.days.map((v: any, k: number) => {
-          return (
+      {planData.days.length === 0 ? (
+        <div className="text-center text-gray-400 text-lg py-10">
+          尚未建立任何行程
+        </div>
+      ) : (
+        <div className="flex w-full gap-4 p-4 overflow-x-auto">
+          {planData.days.map((v: PlanDay, k: number) => (
             <div
               key={k}
-              className="bg-white border border-gray-300 rounded-lg min-w-[400px] w-[400px] w-full flex flex-col px-4 "
+              className="bg-white border border-gray-300 rounded-lg min-w-[400px] w-[400px] flex flex-col px-4"
             >
               <div className="text-center font-bold border-b py-2 mb-4">
                 {v.dayId}
@@ -68,16 +70,17 @@ export default function PublicPlaceCard({ planData }: { planData: PlanType }) {
                   尚未安排行程
                 </div>
               ) : (
-                v.placesData.map((sv: any, sk: number) => (
+                v.placesData.map((sv: PlaceData, sk: number) => (
                   <div key={sk}>
                     <div className="flex my-2 px-2 items-center justify-center">
                       <div className="flex-shrink-0 mr-2">
                         <img
                           src={sv.photoUrl}
                           className="w-16 h-16 rounded-lg object-cover bg-gray-200"
+                          alt={sv.name}
                         />
                       </div>
-                      <div className="flex-1 min-w-0 ">
+                      <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900 text-sm truncate">
                           {sv.name}
                         </h4>
@@ -91,9 +94,9 @@ export default function PublicPlaceCard({ planData }: { planData: PlanType }) {
                 ))
               )}
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }

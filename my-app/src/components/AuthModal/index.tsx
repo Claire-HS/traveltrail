@@ -171,11 +171,11 @@ export default function AuthModal({
 
       {user ? (
         <button onClick={logout} className={buttonClassName}>
-          會員登出
+          登出
         </button>
       ) : (
         <button onClick={open} className={buttonClassName}>
-          會員登入
+          登入
         </button>
       )}
     </>
