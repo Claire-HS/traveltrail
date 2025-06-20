@@ -5,6 +5,8 @@ import {
   query,
   where,
   documentId,
+  doc,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "@/library/firebase";
 
@@ -14,15 +16,14 @@ export async function getPublicPlanWithPlaces(
 ) {
   if (!planId || !userId) return null;
 
-  // const fullPath = `users/${userId}/plans/${planId}`;
-  const q = query(collectionGroup(db, "plans"), where("isPublic", "==", true));
+  const fullPath = `users/${userId}/plans/${planId}`;
+  const docRef = doc(db, fullPath);
+  const snap = await getDoc(docRef);
 
-  const snap = await getDocs(q);
-  if (snap.empty) return null;
+  if (!snap.exists()) return null;
 
-  const planDoc = snap.docs[0];
-  const planInfo = planDoc.data();
-  const planRef = planDoc.ref;
+  const planInfo = snap.data();
+  const planRef = snap.ref;
 
   const daysRef = collection(planRef, "days");
   const daysSnapshot = await getDocs(daysRef);
@@ -49,7 +50,7 @@ export async function getPublicPlanWithPlaces(
   }
 
   return {
-    planId: planDoc.id,
+    planId: snap.id,
     ...planInfo,
     days: daysWithPlaces,
   };

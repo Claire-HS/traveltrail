@@ -32,7 +32,7 @@ export default function SharingPage() {
     );
   }
 
-  // console.log("plan=", plan);
+  console.log("plan=", plan);
 
   return (
     <>
