@@ -92,6 +92,7 @@ export default function Page() {
           isPublic: false, // 新增時預設不公開
           createdAt: serverTimestamp(),
           userName: user.displayName,
+          userId: user.uid,
         }
       );
 

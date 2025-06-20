@@ -559,11 +559,15 @@ export default function PlanningPage() {
     const activeId = active.id as string;
     const overId = over.id as string;
 
-    // 確定拖拽的來源和目標
     const sourceContainer = getContainerByItemId(activeId);
     const targetContainer = getContainerById(overId);
 
     if (!sourceContainer || !targetContainer) return;
+
+    if (targetContainer === "sidebar" && !selectedList) {
+      notify({ type: "warning", message: "請先選擇一個清單！" });
+      return;
+    }
 
     try {
       // 從 sidebar 拖拽
@@ -1320,13 +1324,12 @@ export default function PlanningPage() {
           setIsGoogleLoaded(true); // 確保 google 載入完成後再渲染地圖
         }}
       />
-      <div className="h-[calc(100vh-160px)] w-[98vw] mt-5 shadow-lg shadow-foreground/50 relative flex flex-col md:flex-row gap-3">
-        <div className="w-full md:w-[800px] bg-gray-100 px-1">
+      <div className="min-h-[calc(100vh-160px)] w-[98vw] my-5 shadow-lg shadow-foreground/50 relative flex flex-col md:h-[calc(100vh-160px)] flex-row gap-3">
+        <div className="min-h-[calc(100vh-160px)] w-full md:w-[800px] bg-gray-100 px-1">
           {user && isGoogleLoaded && <MapWithPlaceAutocomplete />}
         </div>
-
         {/* 主要內容區塊 */}
-        <div className="flex flex-1 py-2 gap-2 justify-center">
+        <div className="flex flex-col md:flex-row flex-1 py-2 gap-2 justify-center">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
@@ -1616,7 +1619,6 @@ export default function PlanningPage() {
             </DragOverlay>
           </DndContext>
         </div>
-
         {/* 編輯行程 */}
         <Modal
           opened={editPlanOpened}

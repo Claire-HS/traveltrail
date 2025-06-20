@@ -21,6 +21,7 @@ interface Plan {
   endDate: string;
   ownerName: string;
   imageSrc: string;
+  userId: string;
 }
 const PAGE_SIZE = 4;
 
@@ -67,6 +68,7 @@ export default function PublicPlansGrid() {
             endDate: data.endDate || "",
             ownerName: data.userName,
             imageSrc: data.imageSrc || "/iceland.jpeg",
+            userId: data.userId,
           };
         });
 
@@ -159,7 +161,7 @@ export default function PublicPlansGrid() {
                 title={plan.name}
                 travelDate={`${plan.startDate} ~ ${plan.endDate}`}
                 ownerName={plan.ownerName}
-                route={`/sharing/${plan.id}`}
+                route={`/sharing?user=${plan.userId}&id=${plan.id}`}
               />
             ))}
           </SimpleGrid>

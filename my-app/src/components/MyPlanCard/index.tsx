@@ -144,13 +144,13 @@ export default function MyPlanCard({
                 >
                   隱私設定
                 </Menu.Item>
-                <Menu.Item leftSection={<IconUsersPlus size={14} />}>
+                {/* <Menu.Item leftSection={<IconUsersPlus size={14} />}>
                   共同編輯-尚未完成
-                </Menu.Item>
+                </Menu.Item> */}
               </Menu.Dropdown>
             </Menu>
 
-            <Button
+            {/* <Button
               size="xs"
               fullWidth
               variant="outline"
@@ -158,7 +158,7 @@ export default function MyPlanCard({
               disabled
             >
               記帳
-            </Button>
+            </Button> */}
             <Button
               size="xs"
               fullWidth

@@ -214,6 +214,10 @@ const MapWithPlaceAutocomplete = () => {
         ref={cardRef}
         id="place-autocomplete-card"
         className="p-1 w-full max-w-xs mt-2 ml-2 mx-auto bg-white shadow-md rounded-md"
+        style={{
+          minHeight: "40px", // 預估高度
+          visibility: "hidden",
+        }}
       />
       <div ref={mapRef} id="map" className="h-[calc(100vh-160px)] w-full" />
 

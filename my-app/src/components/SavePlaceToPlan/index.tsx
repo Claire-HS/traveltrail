@@ -177,6 +177,7 @@ export default function SavePlaceToPlan({
 
     try {
       const newPlanRef = await addDoc(collection(db, `users/${userId}/plans`), {
+        userId,
         userName,
         name,
         startDate: startDate || null,
