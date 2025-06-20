@@ -1324,8 +1324,8 @@ export default function PlanningPage() {
           setIsGoogleLoaded(true); // 確保 google 載入完成後再渲染地圖
         }}
       />
-      <div className="min-h-[calc(100vh-160px)] w-[98vw] my-5 shadow-lg shadow-foreground/50 relative flex flex-col md:h-[calc(100vh-160px)] flex-row gap-3">
-        <div className="min-h-[calc(100vh-160px)] w-full md:w-[800px] bg-gray-100 px-1">
+      <div className="min-h-[calc(100vh-160px)] my-5 shadow-lg shadow-foreground/50 relative flex flex-col  md:flex-row md:h-[calc(100vh-160px)]  gap-3">
+        <div className="min-h-[calc(100vh-160px)] w-full md:w-[800px] bg-gray-100 px-1 block">
           {user && isGoogleLoaded && <MapWithPlaceAutocomplete />}
         </div>
         {/* 主要內容區塊 */}
@@ -1337,7 +1337,7 @@ export default function PlanningPage() {
             onDragEnd={handleDragEnd}
           >
             {/* Sidebar - 景點清單容器 */}
-            <div className="w-[400px] bg-gray-200 p-4 h-full rounded-lg">
+            <div className="w-full md:w-[400px] bg-gray-200 p-4 h-full rounded-lg">
               <div className="mb-2">
                 <Select
                   label="選擇清單:"
@@ -1394,7 +1394,7 @@ export default function PlanningPage() {
             </div>
 
             {/* Itinerary - 行程容器 */}
-            <div className="w-[400px] bg-blue-50 h-full px-3 rounded-lg">
+            <div className="w-full md:w-[400px] bg-blue-50 h-full px-3 rounded-lg">
               {/* 行程標題區塊 */}
               {planInfo && (
                 <div className="border rounded-xl p-4 mt-4 shadow-sm bg-white">
