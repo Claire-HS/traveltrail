@@ -45,14 +45,14 @@ export default function SharingPage() {
     );
   }
 
-  // console.log(plan);
+  console.log("plan=", plan);
 
   return (
     <>
-      <div>
+      <div className="w-full relative">
         <PublicPlaceCard
           // key={location.id}
-          data={plan}
+          planData={plan}
           // isLast={locationIndex === day.locations.length - 1}
         />
       </div>

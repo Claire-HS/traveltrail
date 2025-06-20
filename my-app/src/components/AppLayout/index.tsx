@@ -43,9 +43,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </AppShell.Header>
       <AppShell.Main className="bg-background flex flex-col">
-        <Container fluid className="h-full flex-grow">
-          {children}
-        </Container>
+        {/* <Container fluid className="h-full flex-grow"> */}
+        {children}
+        {/* </Container> */}
       </AppShell.Main>
       <AppShell.Footer style={{ borderTop: "none" }}>
         <div className="w-full h-full px-4 text-base font-semibold flex justify-center items-center bg-[#2C3E50] text-[#FDFCF9]">
