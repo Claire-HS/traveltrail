@@ -60,7 +60,7 @@ export default function Home() {
         </div>
         <div className="w-full pb-15 flex flex-col justify-center items-center min-h-[500px]">
           <PublicPlansGrid />
-          <div className="mt-8">
+          {/* <div className="mt-8">
             <Box maw={1200} mx="auto">
               <Group justify="center" mb={20}>
                 <Button
@@ -78,7 +78,7 @@ export default function Home() {
                   網站功能導覽
                 </Button>
               </Group>
-              {/* <Collapse in={opened}>
+              <Collapse in={opened}>
                 <Text>
                   快速上手快速上手快速上手快速上手快速上手快速上手快速上手
                   快速上手 快速上手 快速上手 快速上手 快速上手 快速上手
@@ -95,9 +95,9 @@ export default function Home() {
                   快速上手快速上手快速上手快速上手快速上手快速上手快速上手
                   快速上手 快速上手 快速上手 快速上手 快速上手 快速上手
                 </Text>
-              </Collapse> */}
+              </Collapse>
             </Box>
-          </div>
+          </div> */}
         </div>
       </div>
     </>
