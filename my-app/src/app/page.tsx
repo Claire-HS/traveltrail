@@ -78,7 +78,7 @@ export default function Home() {
                   網站功能導覽
                 </Button>
               </Group>
-              <Collapse in={opened}>
+              {/* <Collapse in={opened}>
                 <Text>
                   快速上手快速上手快速上手快速上手快速上手快速上手快速上手
                   快速上手 快速上手 快速上手 快速上手 快速上手 快速上手
@@ -95,7 +95,7 @@ export default function Home() {
                   快速上手快速上手快速上手快速上手快速上手快速上手快速上手
                   快速上手 快速上手 快速上手 快速上手 快速上手 快速上手
                 </Text>
-              </Collapse>
+              </Collapse> */}
             </Box>
           </div>
         </div>
